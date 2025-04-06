@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { rateLimiter } from './middleware/rateLimiter';
 import { Request, Response } from 'express';
+import { extractIntent, generateDatabaseResponse } from './data-integration';
 
 // Initialize Express app
 const app = express();
@@ -83,337 +84,139 @@ const memoryCheck = () => {
   }
 };
 
-// Database content (parsed from the SQL file)
-const database = {
-  AssetDiagnostics: [
-    {
-      diagnostic_id: 1,
-      asset_id: 'T-123',
-      asset_name: 'Transformer T-123',
-      health_score: 92.50,
-      last_diagnostic_date: '2025-04-05 08:30:00',
-      diagnostic_summary: 'No issues detected. Operating within normal parameters.',
-      data_source: 'Bentley APM'
+// Define the database structure with mock data
+const substationDatabase = {
+  assets: {
+    transformers: {
+      "T-123": {
+        health: {
+          score: 92.5,
+          lastDiagnostic: "2025-04-05",
+          issues: []
+        },
+        maintenance: [
+          {
+            date: "2025-03-15",
+            type: "Routine",
+            details: "Oil sample analysis and filter change."
+          },
+          {
+            date: "2024-11-22",
+            type: "Repair",
+            details: "Replaced gasket due to minor oil leak."
+          }
+        ],
+        spareParts: {
+          bushings: { count: 2, location: "Warehouse B" },
+          oilFilters: { count: 10, location: "Warehouse B" }
+        }
+      },
+      "T-789": {
+        health: {
+          score: 78.3,
+          lastDiagnostic: "2025-03-29",
+          issues: ["Elevated dissolved gas levels"]
+        },
+        inspections: [
+          {
+            date: "2025-04-01",
+            type: "Infrared",
+            inspector: "John Doe",
+            findings: "Infrared imaging indicates potential hot spots around core components."
+          }
+        ]
+      },
+      "T-987": {
+        spareParts: {
+          bushings: { count: 5, location: "Warehouse A" }
+        }
+      }
     },
-    {
-      diagnostic_id: 2,
-      asset_id: 'B-456',
-      asset_name: 'Breaker B-456',
-      health_score: 85.00,
-      last_diagnostic_date: '2025-04-04 14:20:00',
-      diagnostic_summary: 'Minor degradation detected in switch contacts.',
-      data_source: 'PI'
-    },
-    {
-      diagnostic_id: 3,
-      asset_id: 'T-789',
-      asset_name: 'Transformer T-789',
-      health_score: 78.30,
-      last_diagnostic_date: '2025-04-03 10:15:00',
-      diagnostic_summary: 'Temperature trends indicate potential overheating.',
-      data_source: 'TOA'
+    breakers: {
+      "B-456": {
+        health: {
+          score: 85.6,
+          lastDiagnostic: "2025-03-25",
+          issues: ["Slow closing time"]
+        },
+        workOrders: [
+          {
+            id: "WO-1234",
+            status: "Open",
+            details: "Investigate slow closing time reported during testing."
+          }
+        ],
+        inspections: [
+          {
+            date: "2025-03-20",
+            type: "Visual",
+            inspector: "Jane Smith",
+            findings: "Signs of wear on contacts, recommended for replacement within 3 months."
+          }
+        ],
+        spareParts: {
+          contacts: { count: 12, location: "Central Store" }
+        }
+      }
     }
-  ],
-  
-  MaintenanceWorkOrders: [
-    {
-      work_order_id: 1001,
-      asset_id: 'T-123',
-      asset_name: 'Transformer T-123',
-      scheduled_date: '2025-04-10',
-      maintenance_details: 'Routine transformer maintenance including oil testing.',
-      work_order_status: 'Scheduled'
-    },
-    {
-      work_order_id: 1002,
-      asset_id: 'S-567',
-      asset_name: 'Substation S-567',
-      scheduled_date: '2025-04-11',
-      maintenance_details: 'Inspection and cleaning of electrical panels.',
-      work_order_status: 'Scheduled'
-    },
-    {
-      work_order_id: 1003,
-      asset_id: 'B-456',
-      asset_name: 'Breaker B-456',
-      scheduled_date: '2025-04-09',
-      maintenance_details: 'Replace worn contacts and perform operational tests.',
-      work_order_status: 'In Progress'
+  },
+  substations: {
+    "S-567": {
+      scheduledMaintenance: [
+        {
+          date: "2025-04-11",
+          status: "Scheduled",
+          details: "Inspection and cleaning of electrical panels."
+        }
+      ],
+      realTimeData: {
+        load: { value: 75.5, timestamp: "9:00:00 AM" },
+        voltage: { value: 11.5, timestamp: "9:00:00 AM" },
+        temperature: { value: 65, timestamp: "9:00:00 AM" }
+      }
     }
-  ],
-  
-  MaintenanceHistory: [
-    {
-      history_id: 2001,
-      work_order_id: 1001,
-      asset_id: 'T-123',
-      asset_name: 'Transformer T-123',
-      maintenance_date: '2025-03-15',
-      maintenance_log: 'Performed oil analysis and replaced filters. No issues found.'
-    },
-    {
-      history_id: 2002,
-      work_order_id: 1003,
-      asset_id: 'B-456',
-      asset_name: 'Breaker B-456',
-      maintenance_date: '2025-03-20',
-      maintenance_log: 'Cleaned contacts and tested operation. Recommended follow-up inspection.'
-    },
-    {
-      history_id: 2003,
-      work_order_id: 1001,
-      asset_id: 'T-123',
-      asset_name: 'Transformer T-123',
-      maintenance_date: '2025-02-10',
-      maintenance_log: 'Routine maintenance completed; performance within norms.'
-    }
-  ],
-  
-  InspectionReports: [
-    {
-      inspection_id: 3001,
-      asset_id: 'T-789',
-      asset_name: 'Transformer T-789',
-      inspection_type: 'Infrared',
-      report_date: '2025-04-01',
-      report_summary: 'Infrared imaging indicates potential hot spots around core components.',
-      inspector_name: 'John Doe'
-    },
-    {
-      inspection_id: 3002,
-      asset_id: 'B-456',
-      asset_name: 'Breaker B-456',
-      inspection_type: 'Visual',
-      report_date: '2025-03-28',
-      report_summary: 'Visual inspection revealed minor wear and tear on casing.',
-      inspector_name: 'Jane Smith'
-    },
-    {
-      inspection_id: 3003,
-      asset_id: 'T-123',
-      asset_name: 'Transformer T-123',
-      inspection_type: 'Infrared',
-      report_date: '2025-03-30',
-      report_summary: 'Thermal patterns are normal, no anomalies detected.',
-      inspector_name: 'Alice Johnson'
-    }
-  ],
-  
-  SafetyGuidelines: [
-    {
-      guideline_id: 7001,
-      procedure_name: 'Live-Line Maintenance',
-      required_PPE: 'Insulated gloves, arc flash suit, helmet',
-      safety_instructions: 'Always de-energize equipment before performing maintenance.',
-      compliance_notes: 'Follow NFPA 70E guidelines.'
-    },
-    {
-      guideline_id: 7002,
-      procedure_name: 'Breaker Racking',
-      required_PPE: 'Hard hat, safety glasses, gloves',
-      safety_instructions: 'Ensure lockout-tagout procedures are followed before racking.',
-      compliance_notes: 'Review annual safety training.'
-    },
-    {
-      guideline_id: 7003,
-      procedure_name: 'High Voltage Inspections',
-      required_PPE: 'Arc flash face shield, insulated gloves, FR clothing',
-      safety_instructions: 'Keep minimum approach distances. Verify equipment is de-energized.',
-      compliance_notes: 'Certification required.'
-    }
-  ]
+  },
+  safety: {
+    guidelines: [
+      {
+        topic: "Live-Line Maintenance",
+        ppe: "Insulated gloves, arc flash suit, helmet",
+        procedures: "Always de-energize equipment before performing maintenance. Follow NFPA 70E guidelines."
+      },
+      {
+        topic: "Breaker Racking",
+        ppe: "Hard hat, safety glasses, gloves",
+        procedures: "Ensure lockout-tagout procedures are followed before racking. Review annual safety training."
+      },
+      {
+        topic: "High Voltage Inspections",
+        ppe: "Arc flash face shield, insulated gloves, FR clothing",
+        procedures: "Keep minimum approach distances. Verify equipment is de-energized. Certification required."
+      }
+    ]
+  }
 };
 
-// Helper function to extract intent and entity from messages
-function extractIntent(message: string): { intent: string; entity: string | null } {
-  const lowerMessage = message.toLowerCase();
-  
-  // Extract entity (asset ID, location, etc.)
-  let entity = null;
-  
-  // Look for asset IDs in format T-123, B-456, etc.
-  const assetPattern = /([t|b|s])-(\d{3})/i;
-  const assetMatch = message.match(assetPattern);
-  if (assetMatch) {
-    entity = assetMatch[0].toUpperCase();
-  }
-  
-  // Look for substation IDs
-  const substationPattern = /(substation\s+[a-z0-9-]+)/i;
-  const substationMatch = message.match(substationPattern);
-  if (substationMatch && !entity) {
-    entity = substationMatch[0];
-  }
-  
-  // Determine intent based on keywords
-  if (lowerMessage.match(/\b(hi|hello|hey|greetings)\b/)) {
-    return { intent: 'greeting', entity };
-  } else if (lowerMessage.match(/\b(ai|artificial intelligence|capabilities|features|what can you do|functionality|chatbot)\b/)) {
-    return { intent: 'ai_capabilities', entity };
-  } else if (lowerMessage.match(/\b(health|status|condition|how is|state)\b/) && lowerMessage.match(/\b(transformer|breaker|asset|equipment)\b/)) {
-    return { intent: 'asset_health', entity };
-  } else if (lowerMessage.match(/\b(maintenance|repair|work order|schedule|planned|upcoming)\b/) && !lowerMessage.match(/\b(history|past|previous|completed)\b/)) {
-    return { intent: 'scheduled_maintenance', entity };
-  } else if (lowerMessage.match(/\b(history|past|previous|completed|last|recent)\b/) && lowerMessage.match(/\b(maintenance|repair|work)\b/)) {
-    return { intent: 'maintenance_history', entity };
-  } else if (lowerMessage.match(/\b(inspection|report|audit|finding|observation)\b/)) {
-    return { intent: 'inspection_reports', entity };
-  } else if (lowerMessage.match(/\b(real-time|current|live|monitoring|data)\b/)) {
-    return { intent: 'real_time_data', entity };
-  } else if (lowerMessage.match(/\b(safety|guideline|protocol|procedure|requirement|ppe|protection)\b/)) {
-    return { intent: 'safety_guidelines', entity };
-  } else if (lowerMessage.match(/\b(spare|part|inventory|replacement|available|stock)\b/)) {
-    return { intent: 'spare_parts', entity };
-  } else {
-    return { intent: 'general_search', entity };
-  }
-}
-
-// Function to get data based on intent and entity
-function getDataBasedOnIntent(intent: string, entity: string | null) {
-  switch (intent) {
-    case 'ai_capabilities':
-      return { 
-        message: "I'm an AI-powered assistant for PG&E Substation Operations. I can understand natural language queries, extract key information, and provide relevant data from the substation database. My capabilities include answering questions about asset health, maintenance schedules, inspection reports, safety guidelines, and more. I can identify specific assets like transformer T-123 and provide detailed information about them. Just ask me anything related to substation operations!"
-      };
-      
-    case 'asset_health':
-      if (entity) {
-        const assetDiagnostic = database.AssetDiagnostics.find(item => item.asset_id === entity);
-        return assetDiagnostic || { message: `No health data found for ${entity}` };
-      } else {
-        return database.AssetDiagnostics;
-      }
-    
-    case 'scheduled_maintenance':
-      if (entity) {
-        const maintenance = database.MaintenanceWorkOrders.filter(item => item.asset_id === entity);
-        return maintenance.length > 0 ? maintenance : { message: `No scheduled maintenance found for ${entity}` };
-      } else {
-        return database.MaintenanceWorkOrders;
-      }
-    
-    case 'maintenance_history':
-      if (entity) {
-        const history = database.MaintenanceHistory.filter(item => item.asset_id === entity);
-        return history.length > 0 ? history : { message: `No maintenance history found for ${entity}` };
-      } else {
-        return database.MaintenanceHistory;
-      }
-    
-    case 'inspection_reports':
-      if (entity) {
-        const reports = database.InspectionReports.filter(item => item.asset_id === entity);
-        return reports.length > 0 ? reports : { message: `No inspection reports found for ${entity}` };
-      } else {
-        return database.InspectionReports;
-      }
-    
-    case 'safety_guidelines':
-      if (entity) {
-        const guidelines = database.SafetyGuidelines.filter(item => 
-          item.procedure_name.toLowerCase().includes(entity.toLowerCase())
-        );
-        return guidelines.length > 0 ? guidelines : database.SafetyGuidelines;
-      } else {
-        return database.SafetyGuidelines;
-      }
-    
-    case 'greeting':
-      return { message: "Hello! I'm the PG&E Substation Operations Assistant. How can I help you today?" };
-    
-    default:
-      return { message: "I understand you're looking for information about substation operations. Can you please specify what type of information you need? For example, you can ask about asset health, maintenance schedules, or safety guidelines." };
-  }
-}
-
-// Function to generate a response from the data
-function generateResponseFromData(intent: string, data: any): string {
-  if (data.message) {
-    return data.message;
-  }
-  
-  switch (intent) {
-    case 'asset_health':
-      if (Array.isArray(data)) {
-        return `I found health information for ${data.length} assets: ${data.map(item => 
-          `${item.asset_name} has a health score of ${item.health_score}. ${item.diagnostic_summary}`
-        ).join(' ')}`;
-      } else {
-        return `${data.asset_name} has a health score of ${data.health_score}. Last diagnostic on ${data.last_diagnostic_date.split(' ')[0]}. ${data.diagnostic_summary}`;
-      }
-      
-    case 'scheduled_maintenance':
-      if (Array.isArray(data)) {
-        return `I found ${data.length} scheduled maintenance tasks: ${data.map(item => 
-          `${item.asset_name} has maintenance scheduled for ${item.scheduled_date} (${item.work_order_status}). Details: ${item.maintenance_details}`
-        ).join(' ')}`;
-      } else {
-        return `${data.asset_name} has maintenance scheduled for ${data.scheduled_date} (${data.work_order_status}). Details: ${data.maintenance_details}`;
-      }
-      
-    case 'maintenance_history':
-      if (Array.isArray(data)) {
-        return `I found ${data.length} maintenance history records: ${data.map(item => 
-          `${item.asset_name} had maintenance on ${item.maintenance_date}. ${item.maintenance_log}`
-        ).join(' ')}`;
-      } else {
-        return `${data.asset_name} had maintenance on ${data.maintenance_date}. ${data.maintenance_log}`;
-      }
-      
-    case 'inspection_reports':
-      if (Array.isArray(data)) {
-        return `I found ${data.length} inspection reports: ${data.map(item => 
-          `${item.asset_name} had a ${item.inspection_type} inspection on ${item.report_date}. ${item.report_summary} (Inspector: ${item.inspector_name})`
-        ).join(' ')}`;
-      } else {
-        return `${data.asset_name} had a ${data.inspection_type} inspection on ${data.report_date}. ${data.report_summary} (Inspector: ${data.inspector_name})`;
-      }
-      
-    case 'safety_guidelines':
-      if (Array.isArray(data)) {
-        return `Here are ${data.length} safety guidelines: ${data.map(item => 
-          `For ${item.procedure_name}, required PPE: ${item.required_PPE}. ${item.safety_instructions} ${item.compliance_notes}`
-        ).join(' ')}`;
-      } else {
-        return `For ${data.procedure_name}, required PPE: ${data.required_PPE}. ${data.safety_instructions} ${data.compliance_notes}`;
-      }
-      
-    default:
-      return "Based on the information in our database, here's what I can tell you: " + JSON.stringify(data);
-  }
-}
-
-// Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
-});
-
-// Chat API endpoint
+// Updated chat API endpoint to use the database-based responses
 app.post('/api/chat/query', (req: Request, res: Response) => {
   try {
     const { message } = req.body;
     
+    // Process the message and generate a response
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    console.log(`Received chat query: ${message}`);
+    // Extract intent and entities from the message
+    const { intent, entities } = extractIntent(message);
     
-    // Process the message to get a database-based response
-    const intentData = extractIntent(message);
-    console.log(`Detected intent: ${intentData.intent}, entity: ${intentData.entity || 'none'}`);
-    
-    const data = getDataBasedOnIntent(intentData.intent, intentData.entity);
-    const response = generateResponseFromData(intentData.intent, data);
-    
-    // Check memory after processing
-    memoryCheck();
+    // Generate response based on intent and entities
+    const response = generateDatabaseResponse(intent, entities);
     
     return res.json({ response });
   } catch (error) {
-    console.error('Error processing chat query:', error);
-    return res.status(500).json({ error: 'An error occurred while processing your message' });
+    console.error('Error processing query:', error);
+    return res.status(500).json({ error: 'An error occurred while processing your query' });
   }
 });
 
