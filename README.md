@@ -25,7 +25,15 @@ The AI assistant includes comprehensive knowledge about:
 * **Entity Extraction**: Identifies specific assets, locations, or topics in queries
 * **Contextual Responses**: Delivers relevant information based on query context
 * **Natural Language Processing**: Processes natural language to understand complex queries
-* **Visualization**: Includes an interactive UI with substation visual representation
+* **Visual Representation**: Includes an interactive UI with CSS-based substation visualization
+
+## Latest Updates
+
+* **Consolidated Server**: Now runs entirely on port 4477 for simplified deployment
+* **Enhanced UI**: Improved interface with responsive design and visual substation elements
+* **Optimized Performance**: Memory management enhancements for better stability
+* **Expanded AI Capabilities**: Added specific response handling for AI capability queries
+* **Improved Font Stack**: Uses "Helvetica Neue" with proper fallbacks for consistent typography
 
 ## Getting Started
 
@@ -48,7 +56,7 @@ npm install
 
 ### Running the Application
 
-We provide a consolidated server implementation that runs on port 4477:
+The application now runs on a single consolidated server on port 4477:
 
 ```bash
 cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/test-web-server.ts
@@ -56,6 +64,7 @@ cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100
 
 ## Sample Queries for the AI Chatbot
 
+* "What are your AI capabilities?"
 * "What is the health status of transformer T-123?"
 * "Is there any scheduled maintenance for North Bay Area?"
 * "What is the maintenance history for transformer T-123?"
@@ -67,7 +76,7 @@ cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100
 If you encounter port conflicts:
 
 ```bash
-# Kill processes on ports
+# Kill processes on port 4477
 kill -9 $(lsof -ti:4477) 2>/dev/null || true
 ```
 
