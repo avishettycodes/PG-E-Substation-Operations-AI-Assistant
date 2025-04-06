@@ -4,88 +4,64 @@ A chatbot application for PG&E substation operations that provides information a
 
 ## Overview
 
-This application allows utility workers and engineers to interact with substation operational data through natural language queries. It includes:
+This application allows utility workers to query substation operational data using natural language. It includes a database-driven chat interface that responds with accurate information about:
 
-- A client application built with React
-- A server application built with Node.js and Express
-- A database-based chat API that responds to queries with relevant information
-- Support for various types of queries including asset health, maintenance schedules, safety procedures, and more
+- Asset health and diagnostics
+- Maintenance schedules and history
+- Safety guidelines and procedures
+- Inspection reports
+- Inventory and spare parts
 
-## Features
+## Getting Started
 
-- **Interactive Chat Interface**: Ask questions in natural language about PG&E substation operations
-- **Asset Health Monitoring**: Get information about the health status of transformers, breakers, and other assets
-- **Maintenance Tracking**: View scheduled maintenance and maintenance history
-- **Inspection Reports**: Access inspection report data
-- **Safety Guidelines**: Retrieve safety procedures for various substation operations
-- **Inventory Management**: Check the availability of spare parts
-- **Natural Language Processing**: The system understands and responds to various phrasings of similar questions
-
-## System Requirements
+### Prerequisites
 
 - Node.js v14 or higher
 - npm v6 or higher
 - 512MB or more of available memory is recommended
 
-## Getting Started
-
 ### Installation
 
-1. Clone this repository
-2. Install dependencies for both client and server:
-
 ```bash
+# Clone the repository
+git clone https://github.com/[your-username]/pge-substation-assistant.git
+cd pge-substation-assistant
+
+# Install dependencies
 npm install
-```
-
-### Configuration
-
-1. Create a `.env` file in the root directory with the following variables:
-
-```
-# OpenAI API Configuration
-OPENAI_API_KEY=your_api_key_here
-
-# Server Configuration
-SERVER_PORT=7777
-LOG_LEVEL=info
-
-# Client Configuration
-PORT=4477
-REACT_APP_API_URL=http://localhost:7777/api
 ```
 
 ### Running the Application
 
-#### Option 1: Run with the default server (OpenAI-based responses)
+We provide two server implementations to accommodate different needs:
+
+#### Option 1: Database-based Server (Recommended)
+
+Uses a mock database to answer queries with specific data:
 
 ```bash
-npm start
+./run-db-server.sh
 ```
 
-#### Option 2: Run with the database-based server (mock data responses)
+#### Option 2: Simple Server
 
 ```bash
-./run-mock-system.sh --database
+./run-mock-system.sh
 ```
 
-### Different Server Options
+By default, the client runs on port 4477 and the server on port 7777.
 
-This project comes with different server implementations:
+### Memory Considerations
 
-1. **Standard Server** (`src/index.ts`): Uses OpenAI API to generate responses
-2. **Simple Mock Server** (`src/simple-mock-server.ts`): Returns hardcoded responses
-3. **Database-based Mock Server** (`src/data-based-mock-server.ts`): Returns data from a sample database
+If you encounter memory issues, run the server and client separately:
 
-See `MOCK_SERVER_README.md` and `DATABASE_SERVER_README.md` for more details.
+```bash
+# Terminal 1 - Run the server only
+cd server && NODE_OPTIONS='--max-old-space-size=256' npx ts-node src/data-based-mock-server.ts
 
-## Documentation
-
-- `ENV_SETUP.md`: Details about environment variable setup
-- `TROUBLESHOOTING.md`: Common issues and their solutions
-- `MOCK_SERVER_README.md`: Information about the mock server
-- `DATABASE_SERVER_README.md`: Details about the database-based server
-- `GITHUB_INSTRUCTIONS.md`: How to push this code to GitHub
+# Terminal 2 - Run the client only
+cd client && PORT=4477 npm start
+```
 
 ## Sample Queries
 
@@ -97,7 +73,20 @@ See `MOCK_SERVER_README.md` and `DATABASE_SERVER_README.md` for more details.
 
 ## Troubleshooting
 
-If you encounter any issues with memory, ports, or other configuration, please see `TROUBLESHOOTING.md` for detailed solutions.
+If you encounter port conflicts:
+
+```bash
+# Kill processes on ports
+kill -9 $(lsof -ti:7777) 2>/dev/null || true
+kill -9 $(lsof -ti:4477) 2>/dev/null || true
+```
+
+For more detailed troubleshooting, see `TROUBLESHOOTING.md`.
+
+## Documentation
+
+- `DATABASE_SERVER_README.md`: Details about the database-based server
+- `TROUBLESHOOTING.md`: Common issues and their solutions
 
 ## License
 

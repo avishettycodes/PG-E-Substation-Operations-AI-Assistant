@@ -1,49 +1,58 @@
-# Pushing to GitHub
+# Cloning and Setup Guide
 
-Follow these steps to push your PG&E Substation Operations Assistant to GitHub:
+This guide will help you get the PG&E Substation Operations Assistant up and running on your local machine.
 
-## 1. Create a new repository on GitHub
-
-1. Go to [GitHub](https://github.com/) and sign in to your account
-2. Click on the "+" icon in the top right corner and select "New repository"
-3. Name your repository (e.g., "pge-substation-assistant")
-4. Add a description (optional)
-5. Choose whether to make it public or private
-6. Do NOT initialize with a README, .gitignore, or license (we've already created these locally)
-7. Click "Create repository"
-
-## 2. Connect your local repository to GitHub
-
-After creating the repository, GitHub will show commands to push an existing repository. Run the following commands in your terminal:
+## 1. Clone the Repository
 
 ```bash
-# Replace YOUR_USERNAME with your GitHub username and REPO_NAME with your repository name
-git remote add origin https://github.com/YOUR_USERNAME/REPO_NAME.git
-
-# Push your local repository to GitHub
-git push -u origin main
+git clone https://github.com/[organization]/pge-substation-assistant.git
+cd pge-substation-assistant
 ```
 
-You might be prompted to authenticate with GitHub. Follow the prompts to complete the authentication.
-
-## 3. Verify the push
-
-1. Go to your GitHub repository page
-2. Refresh the page to see your files
-3. All your code should now be visible on GitHub
-
-## 4. Future pushes
-
-After making changes locally, you can push them to GitHub with:
+## 2. Install Dependencies
 
 ```bash
-git add .
-git commit -m "Description of changes"
-git push
+# Install all required packages
+npm install
 ```
 
-## Troubleshooting
+## 3. Start the Application
 
-- If you get an authentication error, you may need to use a personal access token for authentication
-- If you're unable to push, check if there are any updates on GitHub that you need to pull first
-- If you encounter other issues, refer to GitHub's documentation or support 
+### For the database-based server (recommended):
+
+```bash
+./run-db-server.sh
+```
+
+### For the simple mock server:
+
+```bash
+./run-mock-system.sh
+```
+
+## 4. Access the Application
+
+Once running, you can access the application at:
+- http://localhost:4477
+
+## 5. Troubleshooting
+
+If you encounter port conflicts:
+
+```bash
+# Kill processes on conflicting ports
+kill -9 $(lsof -ti:7777) 2>/dev/null || true  # Server port
+kill -9 $(lsof -ti:4477) 2>/dev/null || true  # Client port
+```
+
+If you experience memory issues:
+
+```bash
+# Run the server with limited memory in one terminal
+cd server && NODE_OPTIONS='--max-old-space-size=256' npx ts-node src/data-based-mock-server.ts
+
+# Run the client in another terminal
+cd client && PORT=4477 npm start
+```
+
+See `TROUBLESHOOTING.md` for more detailed solutions to common issues. 
