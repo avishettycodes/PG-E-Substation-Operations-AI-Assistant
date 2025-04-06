@@ -384,12 +384,12 @@ function generateResponseFromData(intent: string, data: any): string {
 }
 
 // Health check endpoint
-app.get('/health', (_req, res) => {
+app.get('/health', (_req: any, res: any) => {
   res.status(200).json({ status: 'ok' });
 });
 
 // Chat API endpoint
-app.post('/api/chat/query', (req, res) => {
+app.post('/api/chat/query', (req: any, res: any) => {
   try {
     const { message } = req.body;
     
@@ -1287,7 +1287,7 @@ fs.writeFileSync(path.join(tempDir, 'index.html'), indexHtml);
 app.use(express.static(tempDir));
 
 // The "catchall" handler
-app.get('*', (_req, res) => {
+app.get('*', (_req: any, res: any) => {
   res.sendFile(path.join(tempDir, 'index.html'));
 });
 
