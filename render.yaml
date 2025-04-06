@@ -3,7 +3,7 @@ services:
   - type: web
     name: pge-substation-ai-assistant
     env: node
-    buildCommand: npm install && cd server && npm install
+    buildCommand: npm install && cd server && npm install && npm install @types/express @types/cors @types/body-parser --save-dev
     startCommand: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/test-web-server.ts
     envVars:
       - key: NODE_ENV
