@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "type": "web",
+      "name": "pge-substation-assistant",
+      "env": "node",
+      "plan": "free",
+      "buildCommand": "cd server && npm install && npm install express-rate-limit jsonwebtoken @types/jsonwebtoken --save && cd ../client && npm install && npm run build && mkdir -p ../server/public && cp -r build/* ../server/public/",
+      "startCommand": "cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/web-server.ts",
+      "healthCheckPath": "/health",
+      "envVars": [
+        {
+          "key": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "key": "PORT",
+          "value": "10000"
+        }
+      ]
+    }
+  ]
+} 

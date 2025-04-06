@@ -28,14 +28,14 @@ router.post('/login', (req, res) => {
 
   // Input validation
   if (!username || !password) {
-    throw new AppError(400, 'Username and password are required');
+    throw new AppError('Username and password are required', 400);
   }
 
   // Find user
   const user = mockUsers.find(u => u.username === username && u.password === password);
   
   if (!user) {
-    throw new AppError(401, 'Invalid credentials');
+    throw new AppError('Invalid credentials', 401);
   }
 
   // Generate JWT token
@@ -65,15 +65,15 @@ router.post('/verify', (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    throw new AppError(401, 'No token provided');
+    throw new AppError('No token provided', 401);
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     res.json({ valid: true, user: decoded });
   } catch (error) {
-    throw new AppError(401, 'Invalid token');
+    throw new AppError('Invalid token', 401);
   }
 });
 
-export const authRouter = router; 
+export default router; 

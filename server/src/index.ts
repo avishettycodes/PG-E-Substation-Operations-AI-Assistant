@@ -8,6 +8,7 @@ import chatRoutes from './routes/chat';
 import { initDatabase } from './data/database';
 import { logger } from './utils/logger';
 import { AppError, errorHandler } from './middleware/errorHandler';
+import { rateLimiter } from './middleware/rateLimiter';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -19,6 +20,9 @@ const PORT = process.env.SERVER_PORT || 7777;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+// Apply rate limiting to all requests
+app.use(rateLimiter);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

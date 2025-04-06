@@ -299,7 +299,7 @@ const database = {
 };
 
 // Function to extract intent from query
-function extractIntent(query: string): { intent: string; entity?: string } {
+export function extractIntent(query: string): { intent: string; entity?: string } {
   const queryLower = query.toLowerCase();
   
   // Check for greetings and intro messages
@@ -406,7 +406,7 @@ function extractIntent(query: string): { intent: string; entity?: string } {
 }
 
 // Function to get data based on intent
-function getDataBasedOnIntent(intent: string, entity?: string): any {
+export function getDataBasedOnIntent(intent: string, entity?: string): any {
   switch (intent) {
     case 'greeting':
       return {
@@ -500,7 +500,7 @@ function getDataBasedOnIntent(intent: string, entity?: string): any {
 }
 
 // Function to generate response from data
-function generateResponseFromData(intent: string, data: any): string {
+export function generateResponseFromData(intent: string, data: any): string {
   if (!data || (Array.isArray(data) && data.length === 0)) {
     return "I couldn't find any information about that in our database. Please try a different query or be more specific.";
   }

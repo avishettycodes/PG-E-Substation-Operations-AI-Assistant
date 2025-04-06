@@ -1,0 +1,1 @@
+web: cd server && npm install && npx ts-node src/data-based-mock-server.ts 
