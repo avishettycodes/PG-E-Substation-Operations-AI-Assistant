@@ -1,41 +1,16 @@
 services:
-  # Combined Web Application and API
+  # AI-Powered Substation Operations Assistant
   - type: web
-    name: pge-substation-assistant
+    name: pge-substation-ai-assistant
     env: node
-    buildCommand: cd server && npm install && npm install express-rate-limit jsonwebtoken @types/jsonwebtoken --save && cd ../client && npm install && npm run build && mkdir -p ../server/public && cp -r build/* ../server/public/
-    startCommand: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/web-server.ts
+    buildCommand: npm install && cd server && npm install
+    startCommand: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/test-web-server.ts
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: 4477
+      - key: OPENAI_API_KEY
+        sync: false
     plan: free
-    healthCheckPath: /health
-    
-  # Frontend Web App
-  - type: web
-    name: pge-substation-web
-    env: static
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/build
-    envVars:
-      - key: REACT_APP_API_URL
-        fromService:
-          name: pge-substation-assistant
-          type: web
-          property: url
-        postfix: /api
-    plan: free
-    
-  # Redirect the API to the backend
-  - type: redirect
-    name: pge-api-redirect
-    source: 
-      type: web
-      name: pge-substation-web
-      path: /api
-    destination: 
-      type: web
-      name: pge-substation-assistant
-      path: /api 
+    healthCheckPath: /health 

@@ -1,14 +1,13 @@
-# Dependencies
+# Dependency directories
 node_modules/
-npm-debug.log
-yarn-debug.log
-yarn-error.log
+*/node_modules/
+**/node_modules/
 
-# Build outputs
+# Build directories
 dist/
 build/
-.next/
-out/
+*/dist/
+*/build/
 
 # Environment variables
 .env
@@ -17,22 +16,32 @@ out/
 .env.test.local
 .env.production.local
 
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
 # IDE files
 .idea/
 .vscode/
 *.sublime-workspace
 *.sublime-project
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Debug logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # SQLite database files
 *.sqlite

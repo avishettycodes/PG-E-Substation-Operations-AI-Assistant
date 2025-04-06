@@ -18,7 +18,11 @@ if (global.gc) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins for now (update this for production)
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json({ limit: '1mb' }));  // Limit payload size
 app.use(rateLimiter); // Apply rate limiting to all requests
 
@@ -1291,7 +1295,8 @@ app.get('*', (_req, res) => {
 app.listen(PORT, () => {
   console.log(`PG&E Substation Operations Assistant running on port ${PORT}`);
   console.log('All functionality consolidated to a single server');
-  console.log(`Open http://localhost:${PORT} in your browser to test the application`);
+  console.log(`Server URL: ${process.env.NODE_ENV === 'production' ? 'https://pge-substation-ai-assistant.onrender.com' : `http://localhost:${PORT}`}`);
+  console.log(`Open ${process.env.NODE_ENV === 'production' ? 'https://pge-substation-ai-assistant.onrender.com' : `http://localhost:${PORT}`} in your browser to test the application`);
 });
 
 // Handle termination signals

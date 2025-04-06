@@ -1,1 +1,1 @@
-web: cd server && npm install && npx ts-node src/data-based-mock-server.ts 
+web: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/test-web-server.ts 
