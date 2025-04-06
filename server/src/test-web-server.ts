@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import fs from 'fs';
 import { rateLimiter } from './middleware/rateLimiter';
+import { Request, Response } from 'express';
 
 // Initialize Express app
 const app = express();
@@ -384,12 +385,12 @@ function generateResponseFromData(intent: string, data: any): string {
 }
 
 // Health check endpoint
-app.get('/health', (_req: any, res: any) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
 
 // Chat API endpoint
-app.post('/api/chat/query', (req: any, res: any) => {
+app.post('/api/chat/query', (req: Request, res: Response) => {
   try {
     const { message } = req.body;
     
@@ -1287,7 +1288,7 @@ fs.writeFileSync(path.join(tempDir, 'index.html'), indexHtml);
 app.use(express.static(tempDir));
 
 // The "catchall" handler
-app.get('*', (_req: any, res: any) => {
+app.get('*', (_req: Request, res: Response) => {
   res.sendFile(path.join(tempDir, 'index.html'));
 });
 
