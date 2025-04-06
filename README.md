@@ -1,168 +1,104 @@
 # PG&E Substation Operations Assistant
 
-A chatbot application designed to assist utility workers with substation operations, maintenance, safety procedures, and technical support.
+A chatbot application for PG&E substation operations that provides information about asset health, maintenance schedules, safety guidelines, and more.
 
-## Server Options
+## Overview
 
-The system includes two different server implementations:
+This application allows utility workers and engineers to interact with substation operational data through natural language queries. It includes:
 
-### 1. Simple Mock Server (Default)
-
-This server provides generic, keyword-based responses. It doesn't require OpenAI API keys but answers are not based on actual database content.
-
-To run:
-```bash
-./run-mock-system.sh
-```
-
-### 2. Database-Based Mock Server
-
-This server provides responses directly from the sample PG&E substation database. It gives more accurate and detailed answers based on actual database content.
-
-To run:
-```bash
-./run-mock-system.sh --database
-```
-or
-```bash
-./run-mock-system.sh -d
-```
+- A client application built with React
+- A server application built with Node.js and Express
+- A database-based chat API that responds to queries with relevant information
+- Support for various types of queries including asset health, maintenance schedules, safety procedures, and more
 
 ## Features
 
-- Natural language processing for substation operations queries
-- Asset health and diagnostics information
-- Maintenance and work order assistance
-- Inspection report lookup and submission
-- Real-time data query from PI & SCADA
-- Compliance & safety guidance
-- Training & knowledge assistance
-- Responsive web interface matching PG&E's official style
+- **Interactive Chat Interface**: Ask questions in natural language about PG&E substation operations
+- **Asset Health Monitoring**: Get information about the health status of transformers, breakers, and other assets
+- **Maintenance Tracking**: View scheduled maintenance and maintenance history
+- **Inspection Reports**: Access inspection report data
+- **Safety Guidelines**: Retrieve safety procedures for various substation operations
+- **Inventory Management**: Check the availability of spare parts
+- **Natural Language Processing**: The system understands and responds to various phrasings of similar questions
 
-## Technology Stack
+## System Requirements
 
-- **Frontend**: React, TypeScript, CSS
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: SQLite
-- **AI**: OpenAI GPT-4 for general queries, custom NLP for structured data queries
+- Node.js v14 or higher
+- npm v6 or higher
+- 512MB or more of available memory is recommended
 
-## Project Structure
-
-```
-├── client/                # React frontend
-│   ├── src/               
-│   │   ├── components/    # UI components
-│   │   ├── assets/        # Images, fonts, etc.
-│   │   └── ...
-├── server/                # Express backend
-│   ├── src/
-│   │   ├── data/          # Database and mock data
-│   │   ├── routes/        # API routes
-│   │   ├── services/      # Business logic
-│   │   ├── utils/         # Utilities
-│   │   └── index.ts       # Server entry point
-```
-
-## Setup Instructions
-
-### Prerequisites
-
-- Node.js (v16 or later)
-- npm or yarn
+## Getting Started
 
 ### Installation
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-username/pge-substation-operations.git
-   cd pge-substation-operations
-   ```
+1. Clone this repository
+2. Install dependencies for both client and server:
 
-2. Install dependencies:
-   ```
-   # Install server dependencies
-   cd server
-   npm install
-   
-   # Install client dependencies
-   cd ../client
-   npm install
-   ```
+```bash
+npm install
+```
 
-3. Create a `.env` file in the root directory with the following variables:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   PORT=7777
-   ```
+### Configuration
+
+1. Create a `.env` file in the root directory with the following variables:
+
+```
+# OpenAI API Configuration
+OPENAI_API_KEY=your_api_key_here
+
+# Server Configuration
+SERVER_PORT=7777
+LOG_LEVEL=info
+
+# Client Configuration
+PORT=4477
+REACT_APP_API_URL=http://localhost:7777/api
+```
 
 ### Running the Application
 
-1. Start the server:
-   ```
-   cd server
-   npm run dev
-   ```
+#### Option 1: Run with the default server (OpenAI-based responses)
 
-2. In a new terminal, start the client:
-   ```
-   cd client
-   npm start
-   ```
-
-3. Open your browser and navigate to `http://localhost:4477` to use the application.
-
-## Database
-
-The application uses SQLite to store substation operations data. The database schema includes:
-
-- Asset diagnostics
-- Maintenance work orders
-- Inspection reports
-- Real-time data
-- Safety guidelines
-- Training materials
-- Inventory information
-
-## API Endpoints
-
-### Chat API
-- `POST /api/chat/query`: Submit a chat message and get a response
-
-### Substation Operations API
-- `GET /api/substation/asset/:assetId/health`: Get asset health data
-- `GET /api/substation/maintenance/scheduled/:location`: Get scheduled maintenance
-- `GET /api/substation/asset/:assetId/maintenance-history`: Get maintenance history
-- `GET /api/substation/asset/:assetId/inspection-reports`: Get inspection reports
-- `GET /api/substation/:substationId/real-time-data`: Get real-time data
-- `GET /api/substation/safety/:procedure`: Get safety guidelines
-- `GET /api/substation/asset/:assetId/spare-parts`: Get spare parts info
-- `GET /api/substation/search?keyword=...`: Search all substation data
-
-## Example Questions
-
-Try asking:
-
-- "What's the health status of Transformer T-123?"
-- "When is the next scheduled maintenance for Breaker B-456?"
-- "Show me the maintenance history for T-123"
-- "What safety equipment is needed for live-line maintenance?"
-- "What are the current sensor readings at Substation S-567?"
-- "Were there any recent incidents with transformers?"
-- "Do we have spare parts for Breaker B-456?"
-
-## Troubleshooting
-
-If you encounter port conflicts:
 ```bash
-# Kill processes on port 7777 (server)
-kill -9 $(lsof -t -i:7777) 2>/dev/null || true
-
-# Kill processes on port 4477 (client)
-kill -9 $(lsof -t -i:4477) 2>/dev/null || true
+npm start
 ```
+
+#### Option 2: Run with the database-based server (mock data responses)
+
+```bash
+./run-mock-system.sh --database
+```
+
+### Different Server Options
+
+This project comes with different server implementations:
+
+1. **Standard Server** (`src/index.ts`): Uses OpenAI API to generate responses
+2. **Simple Mock Server** (`src/simple-mock-server.ts`): Returns hardcoded responses
+3. **Database-based Mock Server** (`src/data-based-mock-server.ts`): Returns data from a sample database
+
+See `MOCK_SERVER_README.md` and `DATABASE_SERVER_README.md` for more details.
 
 ## Documentation
 
-For more details, see:
-- [MOCK_SERVER_README.md](MOCK_SERVER_README.md) - Details on the simple mock server
-- [DATABASE_SERVER_README.md](DATABASE_SERVER_README.md) - Details on the database-based server 
+- `ENV_SETUP.md`: Details about environment variable setup
+- `TROUBLESHOOTING.md`: Common issues and their solutions
+- `MOCK_SERVER_README.md`: Information about the mock server
+- `DATABASE_SERVER_README.md`: Details about the database-based server
+- `GITHUB_INSTRUCTIONS.md`: How to push this code to GitHub
+
+## Sample Queries
+
+- "What is the health status of transformer T-123?"
+- "Is there any scheduled maintenance for North Bay Area?"
+- "What is the maintenance history for transformer T-123?"
+- "Show me safety guidelines for breaker racking"
+- "What spare parts are available for breaker B-456?"
+
+## Troubleshooting
+
+If you encounter any issues with memory, ports, or other configuration, please see `TROUBLESHOOTING.md` for detailed solutions.
+
+## License
+
+This project is proprietary and intended for PG&E internal use. 
