@@ -243,6 +243,8 @@ function extractIntent(message: string): { intent: string; entity: string | null
   // Determine intent based on keywords
   if (lowerMessage.match(/\b(hi|hello|hey|greetings)\b/)) {
     return { intent: 'greeting', entity };
+  } else if (lowerMessage.match(/\b(ai|artificial intelligence|capabilities|features|what can you do|functionality|chatbot)\b/)) {
+    return { intent: 'ai_capabilities', entity };
   } else if (lowerMessage.match(/\b(health|status|condition|how is|state)\b/) && lowerMessage.match(/\b(transformer|breaker|asset|equipment)\b/)) {
     return { intent: 'asset_health', entity };
   } else if (lowerMessage.match(/\b(maintenance|repair|work order|schedule|planned|upcoming)\b/) && !lowerMessage.match(/\b(history|past|previous|completed)\b/)) {
@@ -265,6 +267,11 @@ function extractIntent(message: string): { intent: string; entity: string | null
 // Function to get data based on intent and entity
 function getDataBasedOnIntent(intent: string, entity: string | null) {
   switch (intent) {
+    case 'ai_capabilities':
+      return { 
+        message: "I'm an AI-powered assistant for PG&E Substation Operations. I can understand natural language queries, extract key information, and provide relevant data from the substation database. My capabilities include answering questions about asset health, maintenance schedules, inspection reports, safety guidelines, and more. I can identify specific assets like transformer T-123 and provide detailed information about them. Just ask me anything related to substation operations!"
+      };
+      
     case 'asset_health':
       if (entity) {
         const assetDiagnostic = database.AssetDiagnostics.find(item => item.asset_id === entity);
