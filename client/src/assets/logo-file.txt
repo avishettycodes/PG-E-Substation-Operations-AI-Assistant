@@ -1,0 +1,13 @@
+PG&E Logo Instructions:
+
+1. Replace the placeholder file in 'client/src/assets/images/pge-logo.png' with your actual PG&E logo image file.
+
+2. The image should preferably be a square or rectangle with the PG&E logo clearly visible.
+
+3. The Header component is already set up to import and use this logo file.
+
+4. If you need to use a different file format (jpg, svg, etc.), you can update the import in Header.tsx accordingly.
+
+5. Recommended dimensions: 50px height with proportional width.
+
+6. The image is included in the src/assets directory so that it's properly handled by the build process. 

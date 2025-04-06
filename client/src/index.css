@@ -1,0 +1,208 @@
+/* PG&E color palette */
+:root {
+  --pge-blue: #003366;
+  --pge-blue-light: #0055AA;
+  --pge-white: #FFFFFF;
+  --pge-gray-light: #F5F5F5;
+  --pge-gray-medium: #DDDDDD;
+  --pge-gray-dark: #808080;
+  --pge-dark: #333333;
+  --pge-error: #D32F2F;
+  --pge-success: #388E3C;
+}
+
+/* PG&E Base Styles and CSS Reset */
+
+/* Base Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Document setup */
+html {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  color: #333333;
+  background-color: #F5F5F5;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  color: #333333;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+}
+
+h1 {
+  font-size: 40px;
+}
+
+h2 {
+  font-size: 28px;
+}
+
+h3 {
+  font-size: 22px;
+}
+
+h4 {
+  font-size: 18px;
+}
+
+p {
+  margin-bottom: 1em;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a {
+  color: #0072CE;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Layout and spacing */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Buttons */
+button, 
+.button {
+  display: inline-block;
+  background-color: #FEC200;
+  color: #FFFFFF;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover,
+.button:hover {
+  background-color: #F5B700;
+  text-decoration: none;
+}
+
+/* Form elements */
+input, 
+textarea, 
+select {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  padding: 12px;
+  border: 1px solid #DDDDDD;
+  border-radius: 4px;
+  background-color: white;
+  width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, 
+textarea:focus, 
+select:focus {
+  border-color: #0072CE;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 114, 206, 0.2);
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.text-primary {
+  color: #0072CE;
+}
+
+.text-secondary {
+  color: #555555;
+}
+
+.bg-primary {
+  background-color: #0072CE;
+}
+
+.bg-secondary {
+  background-color: #FEC200;
+}
+
+.bg-light {
+  background-color: #F5F5F5;
+}
+
+.bg-white {
+  background-color: #FFFFFF;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 32px;
+  }
+  
+  h2 {
+    font-size: 24px;
+  }
+  
+  h3 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 28px;
+  }
+  
+  button, 
+  .button {
+    width: 100%;
+  }
+}
+
+/* Image handling */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Adding focus styles for accessibility */
+:focus {
+  outline: 2px solid var(--pge-blue-light);
+  outline-offset: 2px;
+}
+
+/* Prevent overflow issues */
+html, body {
+  overflow-x: hidden;
+} 
