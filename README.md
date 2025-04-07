@@ -29,13 +29,17 @@ The AI assistant includes comprehensive knowledge about:
 
 ## Latest Updates
 
+* **Enhanced Conversation Support**: Added support for casual greetings like "hi", "hey", "what's up" while maintaining focus on substation operations.
+* **Improved Error Handling**: Better TypeScript support and robust error handling for server stability.
+* **Port Configuration**: Updated to use port 7777 to prevent conflicts with other services.
+* **Synthetic Data Generation**: Enhanced capability to generate realistic responses for assets not in the database.
 * **Enhanced Intent Detection**: Improved capability to understand and respond to a wide range of query types including geofencing, predictive maintenance, and training materials.
 * **Consolidated Database**: Comprehensive database structure with tables for asset diagnostics, maintenance, inspections, real-time data, and more.
 * **Optimized Memory Management**: Server configuration optimized for stability and performance.
-* **Improved Startup Script**: Updated startup script for easier deployment and maintenance.
 
 ## Features
 
+* **Conversational Interface**: Responds to simple greetings while maintaining professional focus on substation operations.
 * **Asset Health Monitoring**: Get current health scores and diagnostic information for transformers, breakers, and other assets.
 * **Maintenance Management**: Query scheduled maintenance, view maintenance history, and check work order status.
 * **Inspection Reports**: Access inspection reports including infrared and visual inspections.
@@ -58,8 +62,8 @@ The AI assistant includes comprehensive knowledge about:
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/pge-substation-assistant.git
-   cd pge-substation-assistant
+   git clone https://github.com/avishettycodes/PG-E-Substation-Operations-AI-Assistant.git
+   cd PG-E-Substation-Operations-AI-Assistant
    ```
 
 2. Install dependencies
@@ -78,13 +82,13 @@ The AI assistant includes comprehensive knowledge about:
    ```
 
 2. The script will:
-   - Check for existing processes on port 4477
+   - Check for existing processes on port 7777
    - Set memory limits
    - Load environment variables
    - Install dependencies if needed
    - Start the server
 
-3. Access the API at http://localhost:4477
+3. Access the API at http://localhost:7777
 
 ### API Endpoints
 
@@ -99,14 +103,36 @@ The AI assistant includes comprehensive knowledge about:
 ## Query Examples
 
 ```
+# Greetings
+hi
+hey
+what's up
+
+# Asset Health
 What is the health status of Transformer T-123?
 Which assets have reported diagnostic issues in the past week?
+
+# Maintenance
 What maintenance is scheduled for Substation S-567 next week?
+When is the next scheduled maintenance for Breaker B-888?
+
+# Inspections
 Show me the last infrared inspection report for Transformer T-789.
+
+# Real-time Data
 What is the temperature at Substation S-567 right now?
+
+# Geofencing
 Am I within the geofenced area for Transformer T-123?
+
+# Safety
 What are the safety guidelines for breaker racking?
+What are the safety guidelines for working on high voltage circuits?
+
+# Technical Knowledge
 How do I interpret DGA test results for transformers?
+
+# Inventory
 Do we have spare bushings available for Transformer T-987?
 ```
 
@@ -115,6 +141,8 @@ Do we have spare bushings available for Transformer T-987?
 ### Server Structure
 
 - `data-based-mock-server.ts`: Main server file with database implementation
+- `test-web-server.ts`: Alternative server implementation with TypeScript fixes
+- `test-api.sh`: Test script for verifying API functionality
 - `middleware/`: Rate limiting and other middleware
 - `public/`: Static files for web interface
 
@@ -122,22 +150,13 @@ Do we have spare bushings available for Transformer T-987?
 
 The application includes a `render.yaml` file for easy deployment to Render.com.
 
-## Sample Queries for the AI Chatbot
-
-* "What are your AI capabilities?"
-* "What is the health status of transformer T-123?"
-* "Is there any scheduled maintenance for North Bay Area?"
-* "What is the maintenance history for transformer T-123?"
-* "Show me safety guidelines for breaker racking"
-* "What spare parts are available for breaker B-456?"
-
 ## Troubleshooting
 
 If you encounter port conflicts:
 
 ```bash
-# Kill processes on port 4477
-kill -9 $(lsof -ti:4477) 2>/dev/null || true
+# Kill processes on port 7777
+kill -9 $(lsof -ti:7777) 2>/dev/null || true
 ```
 
 For more detailed troubleshooting, see `TROUBLESHOOTING.md`.

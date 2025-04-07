@@ -3,10 +3,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
-const rateLimiter = require('./middleware/rateLimiter').rateLimiter;
+const { rateLimiter } = require('./middleware/rateLimiter');
 const dataIntegration = require('./data-integration');
+
 const extractIntent = dataIntegration.extractIntent;
 const generateDatabaseResponse = dataIntegration.generateDatabaseResponse;
+
+// Type definitions for Express request and response
+type Request = any;
+type Response = any;
 
 // Create Express app
 const app = express();
@@ -66,6 +71,7 @@ try {
 
 // Serve static files
 app.use('/images', express.static(imagesDir));
+app.use(express.static(publicDir));
 
 // Create a temporary public directory for the main HTML
 const tempDir = path.join(__dirname, '../../temp-public');
@@ -73,35 +79,22 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 
-// Force garbage collection when memory usage is high (if available)
-// const memoryCheck = () => {
-//   if (global.gc) {
-//     const memoryUsage = process.memoryUsage();
-//     const memoryUsageMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-//     if (memoryUsageMB > memoryLimitMB * 0.7) {  // If using more than 70% of limit
-//       console.log(`Memory usage high (${memoryUsageMB}MB). Running garbage collection.`);
-//       global.gc();
-//     }
-//   }
-// };
-
-// Use the database or remove it
-// const substationDatabase = {
-//   // ...database content...
-// };
-
 // Updated chat API endpoint to use the database-based responses
 app.post('/api/chat/query', (req: Request, res: Response) => {
   try {
-    const { message } = req.body;
+    const message = req.body.message;
     
     // Process the message and generate a response
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
+    console.log('Received chat query:', message);
+    
     // Extract intent and entities from the message
     const { intent, entities } = extractIntent(message);
+    
+    console.log(`Detected intent: ${intent}, entities:`, entities);
     
     // Generate response based on intent and entities
     const response = generateDatabaseResponse(intent, entities);
@@ -977,43 +970,31 @@ const indexHtml = `
 </html>
 `;
 
-// Write the index.html file
-fs.writeFileSync(path.join(tempDir, 'index.html'), indexHtml);
-
-// Serve static files from temp directory
-app.use(express.static(tempDir));
-
-// The "catchall" handler
+// For SPAs, serve index.html for all non-API routes
 app.get('*', (_req: Request, res: Response) => {
+  // Write the index.html content to the temporary directory and serve it
+  fs.writeFileSync(path.join(tempDir, 'index.html'), indexHtml);
   res.sendFile(path.join(tempDir, 'index.html'));
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`PG&E Substation Operations Assistant running on port ${PORT}`);
-  console.log('All functionality consolidated to a single server');
-  console.log(`Server URL: ${process.env.NODE_ENV === 'production' ? 'https://pge-substation-ai-assistant.onrender.com' : `http://localhost:${PORT}`}`);
-  console.log(`Open ${process.env.NODE_ENV === 'production' ? 'https://pge-substation-ai-assistant.onrender.com' : `http://localhost:${PORT}`} in your browser to test the application`);
+// Define health check endpoint for monitoring
+app.get('/health', (_req: Request, res: Response) => {
+  return res.json({ status: 'OK', message: 'PG&E Substation Operations Assistant is running' });
 });
 
-// Handle termination signals
+// Start server
+const server = app.listen(PORT, () => {
+  console.log('Serving static files from:', publicDir);
+  console.log('Database-based mock server running on port', PORT);
+});
+
+// Handle graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down server gracefully');
-  process.exit(0);
+  server.close(() => {
+    console.log('Server has been terminated');
+    process.exit(0);
+  });
 });
 
-process.on('SIGTERM', () => {
-  console.log('Shutting down server gracefully');
-  process.exit(0);
-});
-
-// Handle memory warnings
-process.on('warning', (warning) => {
-  if (warning.name === 'MemoryWarning') {
-    console.warn('Memory warning received:', warning.message);
-    if (global.gc) {
-      console.log('Running garbage collection');
-      global.gc();
-    }
-  }
-}); 
+export default app; 
