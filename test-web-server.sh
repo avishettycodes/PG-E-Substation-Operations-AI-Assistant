@@ -18,7 +18,7 @@ echo -e "${GREEN}Starting PG&E Substation Operations AI Assistant...${NC}"
 print_separator
 
 # Check if a process is already running on the port
-PORT=7777
+PORT=4477
 echo "Checking for existing processes on port $PORT..."
 if lsof -i :$PORT > /dev/null; then
   echo -e "${YELLOW}There's already a process running on port $PORT.${NC}"

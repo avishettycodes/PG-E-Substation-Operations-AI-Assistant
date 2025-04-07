@@ -78,13 +78,13 @@ The AI assistant includes comprehensive knowledge about:
    ```
 
 2. The script will:
-   - Check for existing processes on port 7777
+   - Check for existing processes on port 4477
    - Set memory limits
    - Load environment variables
    - Install dependencies if needed
    - Start the server
 
-3. Access the API at http://localhost:7777
+3. Access the API at http://localhost:4477
 
 ### API Endpoints
 

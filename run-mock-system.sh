@@ -1,29 +1,28 @@
 #!/bin/bash
 
-# Check for command line arguments
-if [ "$1" == "--database" ] || [ "$1" == "-d" ]; then
-  SERVER_SCRIPT="src/data-based-mock-server.ts"
-  TITLE="PG&E Chatbot with Database-Based Server"
-  DESCRIPTION="This version uses actual database content to answer questions."
-else
-  SERVER_SCRIPT="src/simple-mock-server.ts"
-  TITLE="PG&E Chatbot with Simple Mock Server"
-  DESCRIPTION="This version uses generic mock responses to answer questions."
-fi
+echo "Starting mock system..."
+echo "This script starts both the mock server and the React client"
 
-echo "$TITLE"
-echo "======================================"
-echo "$DESCRIPTION"
-echo ""
+# Create logs directory if it doesn't exist
+mkdir -p logs
 
 # Kill any existing processes
 echo "Stopping any existing processes..."
-kill -9 $(lsof -t -i:7777) 2>/dev/null || true
 kill -9 $(lsof -t -i:4477) 2>/dev/null || true
+kill -9 $(lsof -t -i:3000) 2>/dev/null || true
 
-# Start the mock server
+# Start server in background
 echo "Starting mock server..."
-cd server && NODE_OPTIONS='--max-old-space-size=256' npx ts-node $SERVER_SCRIPT &
+cd server
+
+# Install dependencies if needed
+if [ ! -d "node_modules" ]; then
+  echo "Installing server dependencies..."
+  npm install
+fi
+
+echo "Starting server on port 4477..."
+NODE_OPTIONS='--max-old-space-size=256' npx ts-node src/simple-mock-server.ts > ../logs/server.log 2>&1 &
 SERVER_PID=$!
 
 # Wait for server to start
@@ -31,13 +30,13 @@ echo "Waiting for server to start..."
 sleep 2
 
 # Check if server is running
-if ! curl -s http://localhost:7777/health > /dev/null; then
+if ! curl -s http://localhost:4477/health > /dev/null; then
   echo "Error: Server failed to start"
-  kill $SERVER_PID 2>/dev/null
+  echo "Check logs/server.log for details"
   exit 1
 fi
 
-echo "Mock server running successfully on port 7777"
+echo "Mock server running successfully on port 4477"
 echo "--------------------------------------------"
 
 # Start the client

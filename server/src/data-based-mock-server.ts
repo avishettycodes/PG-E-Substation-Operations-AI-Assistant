@@ -6,7 +6,7 @@ import * as fs from 'fs';
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 7777;
+const PORT = process.env.PORT || 4477;
 
 // Middleware
 app.use(cors());

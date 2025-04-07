@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 
 // Initialize Express app
 const app = express();
-const PORT = 7777;
+const PORT = 4477;
 
 // Middleware
 app.use(cors());

@@ -10,7 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.SERVER_PORT || 7777;
+const PORT = process.env.SERVER_PORT || 4477;
 
 // Middleware
 app.use(cors());

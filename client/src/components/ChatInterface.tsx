@@ -223,7 +223,7 @@ const ChatInterface: React.FC = () => {
     setError(null);
     
     try {
-      const response = await axios.post('http://localhost:7777/api/chat/query', {
+      const response = await axios.post('http://localhost:4477/api/chat/query', {
         message: userMessage,
       });
       
