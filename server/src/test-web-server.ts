@@ -1,13 +1,14 @@
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import path from 'path';
-import fs from 'fs';
-import { rateLimiter } from './middleware/rateLimiter';
-import { Request, Response } from 'express';
-import { extractIntent, generateDatabaseResponse } from './data-integration';
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+const fs = require('fs');
+const rateLimiter = require('./middleware/rateLimiter').rateLimiter;
+const dataIntegration = require('./data-integration');
+const extractIntent = dataIntegration.extractIntent;
+const generateDatabaseResponse = dataIntegration.generateDatabaseResponse;
 
-// Initialize Express app
+// Create Express app
 const app = express();
 const PORT = process.env.PORT || 4477;
 
@@ -73,129 +74,21 @@ if (!fs.existsSync(tempDir)) {
 }
 
 // Force garbage collection when memory usage is high (if available)
-const memoryCheck = () => {
-  if (global.gc) {
-    const memoryUsage = process.memoryUsage();
-    const memoryUsageMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-    if (memoryUsageMB > memoryLimitMB * 0.7) {  // If using more than 70% of limit
-      console.log(`Memory usage high (${memoryUsageMB}MB). Running garbage collection.`);
-      global.gc();
-    }
-  }
-};
+// const memoryCheck = () => {
+//   if (global.gc) {
+//     const memoryUsage = process.memoryUsage();
+//     const memoryUsageMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
+//     if (memoryUsageMB > memoryLimitMB * 0.7) {  // If using more than 70% of limit
+//       console.log(`Memory usage high (${memoryUsageMB}MB). Running garbage collection.`);
+//       global.gc();
+//     }
+//   }
+// };
 
-// Define the database structure with mock data
-const substationDatabase = {
-  assets: {
-    transformers: {
-      "T-123": {
-        health: {
-          score: 92.5,
-          lastDiagnostic: "2025-04-05",
-          issues: []
-        },
-        maintenance: [
-          {
-            date: "2025-03-15",
-            type: "Routine",
-            details: "Oil sample analysis and filter change."
-          },
-          {
-            date: "2024-11-22",
-            type: "Repair",
-            details: "Replaced gasket due to minor oil leak."
-          }
-        ],
-        spareParts: {
-          bushings: { count: 2, location: "Warehouse B" },
-          oilFilters: { count: 10, location: "Warehouse B" }
-        }
-      },
-      "T-789": {
-        health: {
-          score: 78.3,
-          lastDiagnostic: "2025-03-29",
-          issues: ["Elevated dissolved gas levels"]
-        },
-        inspections: [
-          {
-            date: "2025-04-01",
-            type: "Infrared",
-            inspector: "John Doe",
-            findings: "Infrared imaging indicates potential hot spots around core components."
-          }
-        ]
-      },
-      "T-987": {
-        spareParts: {
-          bushings: { count: 5, location: "Warehouse A" }
-        }
-      }
-    },
-    breakers: {
-      "B-456": {
-        health: {
-          score: 85.6,
-          lastDiagnostic: "2025-03-25",
-          issues: ["Slow closing time"]
-        },
-        workOrders: [
-          {
-            id: "WO-1234",
-            status: "Open",
-            details: "Investigate slow closing time reported during testing."
-          }
-        ],
-        inspections: [
-          {
-            date: "2025-03-20",
-            type: "Visual",
-            inspector: "Jane Smith",
-            findings: "Signs of wear on contacts, recommended for replacement within 3 months."
-          }
-        ],
-        spareParts: {
-          contacts: { count: 12, location: "Central Store" }
-        }
-      }
-    }
-  },
-  substations: {
-    "S-567": {
-      scheduledMaintenance: [
-        {
-          date: "2025-04-11",
-          status: "Scheduled",
-          details: "Inspection and cleaning of electrical panels."
-        }
-      ],
-      realTimeData: {
-        load: { value: 75.5, timestamp: "9:00:00 AM" },
-        voltage: { value: 11.5, timestamp: "9:00:00 AM" },
-        temperature: { value: 65, timestamp: "9:00:00 AM" }
-      }
-    }
-  },
-  safety: {
-    guidelines: [
-      {
-        topic: "Live-Line Maintenance",
-        ppe: "Insulated gloves, arc flash suit, helmet",
-        procedures: "Always de-energize equipment before performing maintenance. Follow NFPA 70E guidelines."
-      },
-      {
-        topic: "Breaker Racking",
-        ppe: "Hard hat, safety glasses, gloves",
-        procedures: "Ensure lockout-tagout procedures are followed before racking. Review annual safety training."
-      },
-      {
-        topic: "High Voltage Inspections",
-        ppe: "Arc flash face shield, insulated gloves, FR clothing",
-        procedures: "Keep minimum approach distances. Verify equipment is de-energized. Certification required."
-      }
-    ]
-  }
-};
+// Use the database or remove it
+// const substationDatabase = {
+//   // ...database content...
+// };
 
 // Updated chat API endpoint to use the database-based responses
 app.post('/api/chat/query', (req: Request, res: Response) => {

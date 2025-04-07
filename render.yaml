@@ -1,16 +1,28 @@
 services:
   # AI-Powered Substation Operations Assistant
   - type: web
-    name: pge-substation-ai-assistant
+    name: pge-substation-assistant
     env: node
-    buildCommand: npm install && cd server && npm install && npm install @types/express @types/cors @types/body-parser --save-dev
-    startCommand: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/test-web-server.ts
+    buildCommand: cd server && npm install
+    startCommand: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/data-based-mock-server.ts
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 4477
-      - key: OPENAI_API_KEY
-        sync: false
     plan: free
-    healthCheckPath: /health 
+    healthCheckPath: /health
+
+  - type: web
+    name: pge-substation-web
+    env: static
+    buildCommand: cd client && npm install && npm run build && cp -r build/* ../server/public/
+    staticPublishPath: ./server/public
+    envVars:
+      - key: API_URL
+        fromService:
+          name: pge-substation-assistant
+          type: web
+          property: url
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: pge-substation-assistant 

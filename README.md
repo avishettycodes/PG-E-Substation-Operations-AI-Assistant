@@ -1,6 +1,6 @@
 # PG&E Substation Operations AI Assistant
 
-An AI-powered chatbot application for PG&E substation operations that provides intelligent responses about asset health, maintenance schedules, safety guidelines, and more.
+An AI-powered assistant for PG&E substation operations that provides information from a comprehensive database including asset health, maintenance schedules, inspections, and more.
 
 ## Overview
 
@@ -29,38 +29,98 @@ The AI assistant includes comprehensive knowledge about:
 
 ## Latest Updates
 
-* **Consolidated Server**: Now runs entirely on port 4477 for simplified deployment
-* **Enhanced UI**: Improved interface with responsive design and visual substation elements
-* **Optimized Performance**: Memory management enhancements for better stability
-* **Expanded AI Capabilities**: Added specific response handling for AI capability queries
-* **Improved Font Stack**: Uses "Helvetica Neue" with proper fallbacks for consistent typography
+* **Enhanced Intent Detection**: Improved capability to understand and respond to a wide range of query types including geofencing, predictive maintenance, and training materials.
+* **Consolidated Database**: Comprehensive database structure with tables for asset diagnostics, maintenance, inspections, real-time data, and more.
+* **Optimized Memory Management**: Server configuration optimized for stability and performance.
+* **Improved Startup Script**: Updated startup script for easier deployment and maintenance.
+
+## Features
+
+* **Asset Health Monitoring**: Get current health scores and diagnostic information for transformers, breakers, and other assets.
+* **Maintenance Management**: Query scheduled maintenance, view maintenance history, and check work order status.
+* **Inspection Reports**: Access inspection reports including infrared and visual inspections.
+* **Predictive Maintenance**: View risk assessments and recommendations based on sensor data.
+* **Real-time Data**: Access current voltage, load, and temperature readings from substations.
+* **Geofencing**: Check if field workers are within authorized work areas.
+* **Safety Guidelines**: Retrieve safety procedures and PPE requirements for various operations.
+* **Training Materials**: Access training resources and documentation.
+* **Incident Reporting**: View past incidents and potential causes.
+* **Inventory Management**: Check availability of spare parts and their locations.
 
 ## Getting Started
 
 ### Prerequisites
 
-* Node.js v14 or higher
-* npm v6 or higher
-* 512MB or more of available memory is recommended
+* Node.js (v16 or higher)
+* npm
 
 ### Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/avishettycodes/PG-E-Substation-Operations-AI-Assistant.git
-cd PG-E-Substation-Operations-AI-Assistant
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/pge-substation-assistant.git
+   cd pge-substation-assistant
+   ```
 
-# Install dependencies
-npm install
-```
+2. Install dependencies
+   ```bash
+   cd server
+   npm install
+   cd ../client
+   npm install
+   ```
 
 ### Running the Application
 
-The application now runs on a single consolidated server on port 4477:
+1. Start the server using the provided script:
+   ```bash
+   ./test-web-server.sh
+   ```
 
-```bash
-cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/test-web-server.ts
+2. The script will:
+   - Check for existing processes on port 7777
+   - Set memory limits
+   - Load environment variables
+   - Install dependencies if needed
+   - Start the server
+
+3. Access the API at http://localhost:7777
+
+### API Endpoints
+
+- **Health Check**: `GET /health`
+- **Chat Query**: `POST /api/chat/query`
+  ```json
+  {
+    "message": "What is the health status of Transformer T-123?"
+  }
+  ```
+
+## Query Examples
+
 ```
+What is the health status of Transformer T-123?
+Which assets have reported diagnostic issues in the past week?
+What maintenance is scheduled for Substation S-567 next week?
+Show me the last infrared inspection report for Transformer T-789.
+What is the temperature at Substation S-567 right now?
+Am I within the geofenced area for Transformer T-123?
+What are the safety guidelines for breaker racking?
+How do I interpret DGA test results for transformers?
+Do we have spare bushings available for Transformer T-987?
+```
+
+## Development
+
+### Server Structure
+
+- `data-based-mock-server.ts`: Main server file with database implementation
+- `middleware/`: Rate limiting and other middleware
+- `public/`: Static files for web interface
+
+## Deployment
+
+The application includes a `render.yaml` file for easy deployment to Render.com.
 
 ## Sample Queries for the AI Chatbot
 

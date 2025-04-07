@@ -1,66 +1,71 @@
 #!/bin/bash
 
-# PG&E Substation Operations AI Assistant Startup Script
-# This script starts the consolidated web server for the PG&E Substation Operations AI Assistant
+# Set colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-echo "Starting PG&E Substation Operations AI Assistant..."
+# Print a line of 50 asterisks
+print_separator() {
+  printf "%0.s*" {1..50}
+  echo ""
+}
 
-# Check if running with sudo (not recommended)
-if [ "$EUID" -eq 0 ]; then
-  echo "Warning: Running as root is not recommended."
-fi
+# Start message
+print_separator
+echo -e "${GREEN}Starting PG&E Substation Operations AI Assistant...${NC}"
+print_separator
 
-# Check for existing processes on port 4477
-PORT=4477
+# Check if a process is already running on the port
+PORT=7777
 echo "Checking for existing processes on port $PORT..."
-if command -v lsof >/dev/null 2>&1; then
-  EXISTING_PID=$(lsof -t -i:$PORT)
-  if [ ! -z "$EXISTING_PID" ]; then
-    echo "Stopping existing process on port $PORT (PID: $EXISTING_PID)..."
-    kill -9 $EXISTING_PID
+if lsof -i :$PORT > /dev/null; then
+  echo -e "${YELLOW}There's already a process running on port $PORT.${NC}"
+  read -p "Do you want to kill it and start a new server? (y/n): " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Stopping existing process..."
+    kill $(lsof -t -i:$PORT) 2>/dev/null || true
+    sleep 2
+  else
+    echo -e "${RED}Server startup cancelled by user.${NC}"
+    exit 1
   fi
 fi
 
-# Setting memory limits
+# Memory configuration
 echo "Setting memory limits..."
-MEMORY_LIMIT=512
-GC_INTERVAL=100
+MEMORY_LIMIT=256
 
-# Check if .env file exists and source it
-if [ -f ".env" ]; then
-  echo "Loading environment variables from .env file..."
+# Check for .env file
+echo "Loading environment variables from .env file..."
+if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 else
-  echo "Warning: .env file not found. Using default settings."
+  echo -e "${YELLOW}Warning: No .env file found. Using default settings.${NC}"
 fi
 
-# Check for OpenAI API key
-if [ -z "$OPENAI_API_KEY" ]; then
-  echo "Warning: OPENAI_API_KEY is not set. The AI may have limited functionality."
-  echo "Please create a .env file with your OpenAI API key to enable all features."
-fi
-
-# Check for dependencies
+# Check dependencies
 echo "Checking for dependencies..."
-if ! command -v node >/dev/null 2>&1; then
-  echo "Error: Node.js is not installed. Please install Node.js to continue."
-  exit 1
-fi
+cd server
 
-if [ ! -d "server/node_modules" ]; then
-  echo "Installing server dependencies..."
-  cd server && npm install
-  cd ..
+if [ ! -d "node_modules" ]; then
+  echo -e "${YELLOW}Installing dependencies...${NC}"
+  npm install
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to install dependencies. Please check the error messages above.${NC}"
+    exit 1
+  fi
 fi
 
 # Start the server
 echo "Starting AI Assistant server..."
-cd server && node --optimize_for_size --max_old_space_size=$MEMORY_LIMIT --gc_interval=$GC_INTERVAL $(which npx) ts-node src/test-web-server.ts
+NODE_OPTIONS="--max-old-space-size=$MEMORY_LIMIT" npx ts-node src/data-based-mock-server.ts
 
-# Handle server exit
-EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-  echo "Error: Server exited with code $EXIT_CODE"
+# Check if the server exited with an error
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Error: Server exited with code $?${NC}"
   echo "Check the logs above for details on what went wrong."
-  exit $EXIT_CODE
-fi 
+  exit 1
+fi

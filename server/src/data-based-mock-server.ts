@@ -1,17 +1,141 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import * as path from 'path';
+import * as fs from 'fs';
 
 // Initialize Express app
 const app = express();
-const PORT = 7777;
+const PORT = process.env.PORT || 7777;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Database content (parsed from the SQL file)
-const database = {
+// Serve static files from the public directory if it exists
+const publicDir = path.join(__dirname, '../../public');
+if (fs.existsSync(publicDir)) {
+  console.log(`Serving static files from: ${publicDir}`);
+  app.use(express.static(publicDir));
+  
+  // For SPAs, serve index.html for all non-API routes
+  app.get('*', (req, res, next) => {
+    if (req.url.startsWith('/api/') || req.url === '/health') {
+      return next();
+    }
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
+} else {
+  console.log(`Public directory not found at: ${publicDir}`);
+}
+
+// Define database interface
+interface Database {
+  AssetDiagnostics: Array<{
+    diagnostic_id: number;
+    asset_id: string;
+    asset_name: string;
+    health_score: number;
+    last_diagnostic_date: string;
+    diagnostic_summary: string;
+    data_source: string;
+  }>;
+  MaintenanceWorkOrders: Array<{
+    work_order_id: number;
+    asset_id: string;
+    asset_name: string;
+    scheduled_date: string;
+    maintenance_details: string;
+    work_order_status: string;
+    work_order_type?: string;
+    assigned_to?: string;
+  }>;
+  MaintenanceHistory: Array<{
+    work_order_id: number;
+    asset_id: string;
+    asset_name: string;
+    maintenance_date: string;
+    maintenance_type?: string;
+    maintenance_log: string;
+    performed_by?: string;
+  }>;
+  InspectionReports: Array<{
+    inspection_id: number;
+    asset_id: string;
+    asset_name: string;
+    inspection_type: string;
+    report_date: string;
+    inspector_name: string;
+    report_summary: string;
+  }>;
+  PredictiveMaintenance: Array<{
+    recommendation_id: number;
+    asset_id: string;
+    asset_name: string;
+    prediction_date: string;
+    risk_level: string;
+    recommendation_details: string;
+    sensor_data_summary: string;
+  }>;
+  RealTimeData: Array<{
+    measurement_id: number;
+    substation_id: string;
+    sensor_type: string;
+    value: number;
+    measurement_time: string;
+    unit?: string;
+    status?: string;
+  }>;
+  SafetyGuidelines: Array<{
+    guideline_id: number;
+    procedure_name: string;
+    required_PPE: string;
+    safety_instructions: string;
+    compliance_notes: string;
+    last_updated?: string;
+  }>;
+  TrainingMaterials: Array<{
+    material_id: number;
+    topic: string;
+    content: string;
+    certification_required: boolean;
+    reference_manual: string;
+    url: string;
+  }>;
+  IncidentReports: Array<{
+    incident_id: number;
+    asset_id: string;
+    asset_name: string;
+    incident_date: string;
+    failure_type: string;
+    description: string;
+    potential_causes: string;
+    logged_by?: string;
+    category?: string;
+  }>;
+  Inventory: Array<{
+    inventory_id: number;
+    asset_id: string;
+    asset_name: string;
+    part_name: string;
+    available_quantity: number;
+    location: string;
+    order_status: string;
+  }>;
+  Geofencing: Array<{
+    geofence_id: number;
+    asset_id: string;
+    asset_name: string;
+    location: string;
+    allowed_radius: number;
+    current_employee_location: string;
+    in_geofence: boolean;
+    remote_assistance_instructions: string;
+  }>;
+}
+
+// Initialize database with sample data
+const database: Database = {
   AssetDiagnostics: [
     {
       diagnostic_id: 1,
@@ -71,24 +195,21 @@ const database = {
   
   MaintenanceHistory: [
     {
-      history_id: 2001,
-      work_order_id: 1001,
+      work_order_id: 2001,
       asset_id: 'T-123',
       asset_name: 'Transformer T-123',
       maintenance_date: '2025-03-15',
       maintenance_log: 'Performed oil analysis and replaced filters. No issues found.'
     },
     {
-      history_id: 2002,
-      work_order_id: 1003,
+      work_order_id: 2002,
       asset_id: 'B-456',
       asset_name: 'Breaker B-456',
       maintenance_date: '2025-03-20',
       maintenance_log: 'Cleaned contacts and tested operation. Recommended follow-up inspection.'
     },
     {
-      history_id: 2003,
-      work_order_id: 1001,
+      work_order_id: 2003,
       asset_id: 'T-123',
       asset_name: 'Transformer T-123',
       maintenance_date: '2025-02-10',
@@ -158,21 +279,21 @@ const database = {
   
   RealTimeData: [
     {
-      data_id: 5001,
+      measurement_id: 5001,
       substation_id: 'S-567',
       sensor_type: 'Load',
       value: 75.50,
       measurement_time: '2025-04-05 09:00:00'
     },
     {
-      data_id: 5002,
+      measurement_id: 5002,
       substation_id: 'S-567',
       sensor_type: 'Voltage',
       value: 11.50,
       measurement_time: '2025-04-05 09:00:00'
     },
     {
-      data_id: 5003,
+      measurement_id: 5003,
       substation_id: 'S-567',
       sensor_type: 'Temperature',
       value: 65.00,
@@ -206,7 +327,7 @@ const database = {
   
   TrainingMaterials: [
     {
-      training_id: 8001,
+      material_id: 8001,
       topic: 'DGA Test Interpretation',
       content: 'Detailed guide on interpreting dissolved gas analysis for transformers.',
       certification_required: true,
@@ -214,7 +335,7 @@ const database = {
       url: 'http://example.com/dga-guide'
     },
     {
-      training_id: 8002,
+      material_id: 8002,
       topic: 'Infrared Inspection Techniques',
       content: 'Best practices for conducting infrared inspections on electrical equipment.',
       certification_required: false,
@@ -222,7 +343,7 @@ const database = {
       url: 'http://example.com/ir-handbook'
     },
     {
-      training_id: 8003,
+      material_id: 8003,
       topic: 'Safety Protocols for Live-Line Maintenance',
       content: 'Step-by-step procedures for safely performing live-line maintenance.',
       certification_required: true,
@@ -269,7 +390,7 @@ const database = {
   
   Inventory: [
     {
-      part_id: 10001,
+      inventory_id: 10001,
       asset_id: 'T-987',
       asset_name: 'Transformer T-987',
       part_name: 'Bushings',
@@ -278,7 +399,7 @@ const database = {
       location: 'Warehouse A'
     },
     {
-      part_id: 10002,
+      inventory_id: 10002,
       asset_id: 'B-456',
       asset_name: 'Breaker B-456',
       part_name: 'Replacement Contacts',
@@ -287,7 +408,7 @@ const database = {
       location: 'Warehouse B'
     },
     {
-      part_id: 10003,
+      inventory_id: 10003,
       asset_id: 'T-123',
       asset_name: 'Transformer T-123',
       part_name: 'Oil Filters',
@@ -295,18 +416,54 @@ const database = {
       order_status: 'In Stock',
       location: 'Warehouse A'
     }
+  ],
+
+  // Initialize Geofencing data
+  Geofencing: [
+    {
+      geofence_id: 6001,
+      asset_id: 'S-567',
+      asset_name: 'Substation S-567',
+      location: 'Downtown Facility',
+      allowed_radius: 100,
+      current_employee_location: 'Downtown Facility - Gate A',
+      in_geofence: true,
+      remote_assistance_instructions: 'No remote assistance needed.'
+    },
+    {
+      geofence_id: 6002,
+      asset_id: 'T-123',
+      asset_name: 'Transformer T-123',
+      location: 'North Substation',
+      allowed_radius: 150,
+      current_employee_location: 'North Substation - Main Entrance',
+      in_geofence: true,
+      remote_assistance_instructions: 'If outside geofence, call dispatch immediately.'
+    },
+    {
+      geofence_id: 6003,
+      asset_id: 'B-456',
+      asset_name: 'Breaker B-456',
+      location: 'East Substation',
+      allowed_radius: 100,
+      current_employee_location: 'Parking Lot',
+      in_geofence: false,
+      remote_assistance_instructions: 'Employee is outside allowed area; contact supervisor.'
+    }
   ]
 };
 
 // Function to extract intent from query
 export function extractIntent(query: string): { intent: string; entity?: string } {
   const queryLower = query.toLowerCase();
+  console.log(`Processing query: "${queryLower}"`);
   
   // Check for greetings and intro messages
   if (/^(hi|hello|hey|greetings|howdy|hola).{0,10}$/i.test(queryLower) || 
       queryLower === 'hi there' || 
       queryLower === 'hello there' || 
       queryLower === 'hey there') {
+    console.log('Detected intent: greeting');
     return { intent: 'greeting' };
   }
   
@@ -318,6 +475,7 @@ export function extractIntent(query: string): { intent: string; entity?: string 
       (queryLower.includes('what') && queryLower.includes('information') && queryLower.includes('provide')) ||
       queryLower.includes('what are your capabilities') ||
       queryLower.includes('show me what you can do')) {
+    console.log('Detected intent: help');
     return { intent: 'help' };
   }
   
@@ -326,21 +484,45 @@ export function extractIntent(query: string): { intent: string; entity?: string 
   const assetMatches = queryLower.match(/([tb]-\d{3})/i);
   if (assetMatches) {
     entity = assetMatches[1].toUpperCase();
+    console.log(`Detected entity: ${entity}`);
   }
   
   const substationMatches = queryLower.match(/(s-\d{3})/i);
   if (substationMatches) {
     entity = substationMatches[1].toUpperCase();
+    console.log(`Detected entity: ${entity}`);
+  }
+  
+  // Check for geofencing queries FIRST to prioritize this intent
+  if (queryLower.includes('geofence') || 
+      queryLower.includes('geofenced') ||
+      queryLower.includes('location') || 
+      queryLower.includes('am i within') || 
+      queryLower.includes('allowed area') ||
+      queryLower.includes('check my') || 
+      queryLower.includes('current location')) {
+    console.log(`Detected intent: geofencing, entity: ${entity}`);
+    return { intent: 'geofencing', entity };
   }
   
   // Check for asset health intent
-  if (queryLower.includes('health') || queryLower.includes('status') || queryLower.includes('condition')) {
+  if (queryLower.includes('health') || queryLower.includes('status') || queryLower.includes('condition') || 
+      queryLower.includes('diagnostic summary') || queryLower.includes('diagnostics')) {
+    console.log(`Detected intent: asset_health, entity: ${entity}`);
     return { intent: 'asset_health', entity };
+  }
+  
+  // Check for aggregated issues/diagnostics query
+  if ((queryLower.includes('which') || queryLower.includes('what')) && 
+      queryLower.includes('assets') && 
+      (queryLower.includes('issues') || queryLower.includes('problems') || queryLower.includes('diagnostic issues'))) {
+    return { intent: 'diagnostic_issues' };
   }
   
   // Check for maintenance intent
   if (queryLower.includes('maintenance') || queryLower.includes('work order')) {
-    if (queryLower.includes('history') || queryLower.includes('past')) {
+    if (queryLower.includes('history') || queryLower.includes('past') || queryLower.includes('historical') || 
+        queryLower.includes('logs') || queryLower.includes('retrieve')) {
       return { intent: 'maintenance_history', entity };
     } else {
       return { intent: 'maintenance_schedule', entity };
@@ -349,27 +531,48 @@ export function extractIntent(query: string): { intent: string; entity?: string 
   
   // Check for inspection intent
   if (queryLower.includes('inspection') || queryLower.includes('report')) {
+    if (queryLower.includes('submit') || queryLower.includes('new') || queryLower.includes('create') || 
+        queryLower.includes('how can i')) {
+      return { intent: 'inspection_submission' };
+    }
+    
+    // Check for inspection type
+    if (queryLower.includes('infrared')) {
+      entity = entity || 'infrared';
+      return { intent: 'inspection_report', entity };
+    }
+    
+    if (queryLower.includes('visual')) {
+      entity = entity || 'visual';
+      return { intent: 'inspection_report', entity };
+    }
+    
     return { intent: 'inspection_report', entity };
   }
   
   // Check for predictive maintenance
-  if (queryLower.includes('prediction') || queryLower.includes('predict') || queryLower.includes('recommend')) {
+  if (queryLower.includes('predictive') || queryLower.includes('predict') || 
+      (queryLower.includes('based on') && queryLower.includes('sensor')) || 
+      (queryLower.includes('maintenance') && queryLower.includes('recommendation')) ||
+      queryLower.includes('risk level') || queryLower.includes('alerts')) {
     return { intent: 'predictive_maintenance', entity };
   }
   
   // Check for real-time data
-  if (queryLower.includes('real-time') || queryLower.includes('sensor') || 
-      queryLower.includes('voltage') || queryLower.includes('load') || 
-      queryLower.includes('temperature')) {
+  if (queryLower.includes('real-time') || queryLower.includes('real time') || queryLower.includes('current') || 
+      queryLower.includes('sensor') || queryLower.includes('voltage') || queryLower.includes('load') || 
+      queryLower.includes('temperature') || queryLower.includes('latest') || queryLower.includes('reading') ||
+      queryLower.includes('right now')) {
     return { intent: 'real_time_data', entity };
   }
   
   // Check for safety guidelines
   if (queryLower.includes('safety') || queryLower.includes('ppe') || 
-      queryLower.includes('compliance') || queryLower.includes('procedure')) {
-    if (queryLower.includes('live-line')) {
+      queryLower.includes('compliance') || queryLower.includes('procedure') ||
+      queryLower.includes('guidelines') || queryLower.includes('steps')) {
+    if (queryLower.includes('live-line') || queryLower.includes('live line')) {
       return { intent: 'safety_guidelines', entity: 'Live-Line Maintenance' };
-    } else if (queryLower.includes('breaker')) {
+    } else if (queryLower.includes('breaker racking') || queryLower.includes('breaker')) {
       return { intent: 'safety_guidelines', entity: 'Breaker Racking' };
     } else if (queryLower.includes('high voltage')) {
       return { intent: 'safety_guidelines', entity: 'High Voltage Inspections' };
@@ -378,15 +581,34 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     }
   }
   
+  // Check for training materials
+  if (queryLower.includes('training') || queryLower.includes('how do i') || 
+      queryLower.includes('interpret') || queryLower.includes('dga') || 
+      queryLower.includes('guidance') || queryLower.includes('technique') ||
+      queryLower.includes('protocol') || queryLower.includes('procedures')) {
+    if (queryLower.includes('dga')) {
+      return { intent: 'training_materials', entity: 'DGA Test Interpretation' };
+    } else if (queryLower.includes('infrared')) {
+      return { intent: 'training_materials', entity: 'Infrared Inspection Techniques' };
+    } else if (queryLower.includes('live-line') || queryLower.includes('live line')) {
+      return { intent: 'training_materials', entity: 'Safety Protocols for Live-Line Maintenance' };
+    } else {
+      return { intent: 'training_materials', entity };
+    }
+  }
+  
   // Check for incidents
   if (queryLower.includes('incident') || queryLower.includes('failure') || 
-      queryLower.includes('accident') || queryLower.includes('outage')) {
+      queryLower.includes('accident') || queryLower.includes('outage') ||
+      queryLower.includes('report') || queryLower.includes('log a') ||
+      queryLower.includes('need to report') || queryLower.includes('historical')) {
     return { intent: 'incidents', entity };
   }
   
   // Check for inventory
   if (queryLower.includes('inventory') || queryLower.includes('part') || 
-      queryLower.includes('spare') || queryLower.includes('stock')) {
+      queryLower.includes('spare') || queryLower.includes('stock') ||
+      queryLower.includes('available') || queryLower.includes('replacement')) {
     return { intent: 'inventory', entity };
   }
   
@@ -419,6 +641,9 @@ export function getDataBasedOnIntent(intent: string, entity?: string): any {
                 "- Asset health status (e.g., 'What is the health status of transformer T-123?')\n" +
                 "- Maintenance schedules (e.g., 'Is there any scheduled maintenance for North Bay Area?')\n" +
                 "- Maintenance history (e.g., 'What is the maintenance history for transformer T-123?')\n" +
+                "- Inspection reports (e.g., 'Show me the infrared inspection for T-789')\n" +
+                "- Real-time data (e.g., 'What is the temperature at Substation S-567?')\n" +
+                "- Predictive maintenance (e.g., 'What is the risk level for Breaker B-456?')\n" +
                 "- Safety procedures (e.g., 'Show me safety guidelines for breaker racking')\n" +
                 "- Inventory information (e.g., 'What spare parts are available for breaker B-456?')\n\n" +
                 "Please ask specific questions related to PG&E substation operations."
@@ -436,6 +661,38 @@ export function getDataBasedOnIntent(intent: string, entity?: string): any {
         return database.AssetDiagnostics;
       }
       
+    case 'diagnostic_issues':
+      // Filter assets with issues in the past week
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      // Find assets with health issues
+      const assetsWithIssues = database.AssetDiagnostics.filter(asset => {
+        const diagDate = new Date(asset.last_diagnostic_date);
+        return diagDate >= oneWeekAgo && 
+               (asset.diagnostic_summary.toLowerCase().includes('issue') || 
+                asset.diagnostic_summary.toLowerCase().includes('problem') ||
+                asset.diagnostic_summary.toLowerCase().includes('degrad') ||
+                asset.diagnostic_summary.toLowerCase().includes('abnormal') ||
+                asset.health_score < 85);
+      });
+      
+      // Find assets with inspection issues
+      const inspectionsWithIssues = database.InspectionReports.filter(report => {
+        const reportDate = new Date(report.report_date);
+        return reportDate >= oneWeekAgo && 
+               (report.report_summary.toLowerCase().includes('issue') ||
+                report.report_summary.toLowerCase().includes('problem') ||
+                report.report_summary.toLowerCase().includes('hot spot') ||
+                report.report_summary.toLowerCase().includes('wear') ||
+                report.report_summary.toLowerCase().includes('concern'));
+      });
+      
+      return { 
+        diagnosticIssues: assetsWithIssues,
+        inspectionIssues: inspectionsWithIssues
+      };
+      
     case 'maintenance_schedule':
       if (entity) {
         return database.MaintenanceWorkOrders.filter(item => item.asset_id === entity);
@@ -452,10 +709,29 @@ export function getDataBasedOnIntent(intent: string, entity?: string): any {
       
     case 'inspection_report':
       if (entity) {
-        return database.InspectionReports.filter(item => item.asset_id === entity);
+        if (entity === 'infrared' || entity === 'visual') {
+          // Filter by inspection type
+          return database.InspectionReports.filter(item => item.inspection_type.toLowerCase() === entity.toLowerCase());
+        } else {
+          // Filter by asset ID
+          return database.InspectionReports.filter(item => item.asset_id === entity);
+        }
       } else {
         return database.InspectionReports;
       }
+      
+    case 'inspection_submission':
+      return {
+        message: "To submit a new inspection report, please follow these steps:\n\n" +
+                "1. Log in to the PG&E Asset Management System\n" +
+                "2. Navigate to 'Inspections' > 'New Inspection Report'\n" +
+                "3. Select the asset type and ID you're inspecting\n" +
+                "4. Choose the inspection type (Visual, Infrared, etc.)\n" +
+                "5. Fill out all required fields with your findings\n" +
+                "6. Attach any relevant photos or documentation\n" +
+                "7. Submit the form for review\n\n" +
+                "Your report will be processed and added to the asset's inspection history."
+      };
       
     case 'predictive_maintenance':
       if (entity) {
@@ -471,11 +747,25 @@ export function getDataBasedOnIntent(intent: string, entity?: string): any {
         return database.RealTimeData;
       }
       
+    case 'geofencing':
+      if (entity) {
+        return database.Geofencing.filter(item => item.asset_id === entity);
+      } else {
+        return database.Geofencing;
+      }
+      
     case 'safety_guidelines':
       if (entity) {
         return database.SafetyGuidelines.filter(item => item.procedure_name === entity);
       } else {
         return database.SafetyGuidelines;
+      }
+      
+    case 'training_materials':
+      if (entity) {
+        return database.TrainingMaterials.filter(item => item.topic === entity);
+      } else {
+        return database.TrainingMaterials;
       }
       
     case 'incidents':
@@ -506,7 +796,7 @@ export function generateResponseFromData(intent: string, data: any): string {
   }
   
   // Handle special message-based responses
-  if (data.message && (intent === 'greeting' || intent === 'help' || intent === 'off_topic' || intent === 'general')) {
+  if (data.message && (intent === 'greeting' || intent === 'help' || intent === 'off_topic' || intent === 'general' || intent === 'inspection_submission')) {
     return data.message;
   }
   
@@ -523,6 +813,28 @@ export function generateResponseFromData(intent: string, data: any): string {
       } else {
         return `${data.asset_name} has a health score of ${data.health_score}. Last diagnostic on ${new Date(data.last_diagnostic_date).toLocaleDateString()}. ${data.diagnostic_summary}`;
       }
+      
+    case 'diagnostic_issues':
+      const { diagnosticIssues, inspectionIssues } = data;
+      let response = 'Based on our records, ';
+      
+      if (diagnosticIssues.length === 0 && inspectionIssues.length === 0) {
+        return 'No assets have reported diagnostic issues in the past week.';
+      }
+      
+      if (diagnosticIssues.length > 0) {
+        response += `the following assets have diagnostic issues: ${diagnosticIssues.map(asset => 
+          `${asset.asset_name} (Score: ${asset.health_score}, Issue: ${asset.diagnostic_summary})`
+        ).join('; ')}. `;
+      }
+      
+      if (inspectionIssues.length > 0) {
+        response += `The following assets have inspection issues: ${inspectionIssues.map(report => 
+          `${report.asset_name} (${report.inspection_type} inspection on ${report.report_date}: ${report.report_summary})`
+        ).join('; ')}.`;
+      }
+      
+      return response;
       
     case 'maintenance_schedule':
       if (Array.isArray(data)) {
@@ -553,7 +865,7 @@ export function generateResponseFromData(intent: string, data: any): string {
       
     case 'predictive_maintenance':
       if (Array.isArray(data)) {
-        return `I found information about ${data.length} predictive maintenance recommendations: ${data.map(item => 
+        return `I found information about ${data.length} predictive maintenance recommendations: ${data.map(item =>
           `${item.asset_name} has a ${item.risk_level} risk level as of ${item.prediction_date}. ${item.recommendation_details} Sensor data: ${item.sensor_data_summary}`
         ).join(' ')}`;
       } else {
@@ -569,13 +881,31 @@ export function generateResponseFromData(intent: string, data: any): string {
         return `${data.sensor_type}: ${data.value} as of ${new Date(data.measurement_time).toLocaleTimeString()}`;
       }
       
+    case 'geofencing':
+      if (Array.isArray(data)) {
+        return `Geofencing information: ${data.map(item => 
+          `For ${item.asset_name} at ${item.location}, you are currently ${item.in_geofence ? 'WITHIN' : 'OUTSIDE'} the allowed area (${item.allowed_radius}m radius). ${item.remote_assistance_instructions}`
+        ).join(' ')}`;
+      } else {
+        return `For ${data.asset_name} at ${data.location}, you are currently ${data.in_geofence ? 'WITHIN' : 'OUTSIDE'} the allowed area (${data.allowed_radius}m radius). ${data.remote_assistance_instructions}`;
+      }
+      
     case 'safety_guidelines':
       if (Array.isArray(data)) {
-        return `Safety guidelines for ${data.length} procedures: ${data.map(item => 
+        return `Here are ${data.length} safety guidelines: ${data.map(item => 
           `For ${item.procedure_name}, required PPE: ${item.required_PPE}. ${item.safety_instructions} ${item.compliance_notes}`
         ).join(' ')}`;
       } else {
         return `For ${data.procedure_name}, required PPE: ${data.required_PPE}. ${data.safety_instructions} ${data.compliance_notes}`;
+      }
+      
+    case 'training_materials':
+      if (Array.isArray(data)) {
+        return `I found ${data.length} relevant training materials: ${data.map(item => 
+          `Topic: ${item.topic} - ${item.content} ${item.certification_required ? 'Certification required.' : ''} Reference: ${item.reference_manual}. URL: ${item.url}`
+        ).join(' ')}`;
+      } else {
+        return `Topic: ${data.topic} - ${data.content} ${data.certification_required ? 'Certification required.' : ''} Reference: ${data.reference_manual}. URL: ${data.url}`;
       }
       
     case 'incidents':
