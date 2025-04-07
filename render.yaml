@@ -24,6 +24,7 @@ services:
           name: pge-substation-assistant
           type: web
           property: host
+          envKey: API_HOST
     routes:
       - type: rewrite
         source: /api/*
