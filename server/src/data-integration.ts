@@ -90,6 +90,13 @@ export const substationDatabase = {
         voltage: { value: 11.5, timestamp: "9:00:00 AM" },
         temperature: { value: 65, timestamp: "9:00:00 AM" }
       }
+    },
+    "S-999": {
+      realTimeData: {
+        load: { value: 87, timestamp: "2:57:53 AM" },
+        voltage: { value: 12, timestamp: "2:57:53 AM" },
+        temperature: { value: 71, timestamp: "2:57:53 AM" }
+      }
     }
   },
   safety: {
@@ -120,6 +127,30 @@ export function extractIntent(message: string): { intent: string, entities: any 
   // Extract intent and entities based on keywords in the message
   let intent = "unknown";
   const entities: any = {};
+  
+  // Greeting detection
+  const greetingPatterns = [
+    /^hi\b/i, /^hello\b/i, /^hey\b/i, /^greetings\b/i, 
+    /^good morning\b/i, /^good afternoon\b/i, /^good evening\b/i,
+    /^yo\b/i, /^sup\b/i, /^what'?s up\b/i, /^howdy\b/i,
+    /^hi there\b/i, /^hello there\b/i, /^hey there\b/i
+  ];
+  
+  if (greetingPatterns.some(pattern => pattern.test(message_lower))) {
+    intent = "greeting";
+    return { intent, entities };
+  }
+  
+  // Personal question detection (to be rejected)
+  const personalQuestionPatterns = [
+    /how are you/i, /how'?s it going/i, /how'?s your day/i, 
+    /how do you feel/i, /are you doing (ok|good|well)/i
+  ];
+  
+  if (personalQuestionPatterns.some(pattern => pattern.test(message_lower))) {
+    intent = "personalQuestion";
+    return { intent, entities };
+  }
   
   // Asset Health
   if (message_lower.includes("health") || message_lower.includes("diagnostic") || message_lower.includes("condition")) {
@@ -262,6 +293,10 @@ export function extractIntent(message: string): { intent: string, entities: any 
 // Function to generate response based on intent and entities
 export function generateDatabaseResponse(intent: string, entities: any): string {
   switch (intent) {
+    case "greeting":
+      return getGreetingResponse();
+    case "personalQuestion":
+      return getPersonalQuestionResponse();
     case "assetHealth":
       return getAssetHealthResponse(entities);
     case "maintenance":
@@ -280,6 +315,20 @@ export function generateDatabaseResponse(intent: string, entities: any): string 
 }
 
 // Functions for generating specific responses
+
+function getGreetingResponse(): string {
+  const greetings = [
+    "Hello! I'm the PG&E Substation Operations Assistant. I can help you with information about transformer health, maintenance schedules, safety guidelines, and more. How can I assist you with substation operations today?",
+    "Welcome to the Substation Operations AI Assistant. I'm here to provide you with information about our electrical grid assets and operations. What substation-related information do you need?",
+    "Greetings! I'm your Substation Operations virtual assistant. I can provide information on asset health, maintenance schedules, real-time data, and safety procedures. How may I help you?"
+  ];
+  
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
+
+function getPersonalQuestionResponse(): string {
+  return "I'm the PG&E Substation Operations Assistant, designed to provide information about electrical grid assets and operations. I don't have personal experiences. How can I help you with information about our substations, transformers, or maintenance schedules?";
+}
 
 function getAssetHealthResponse(entities: any): string {
   if (entities.assetType === "transformer" && entities.assetId) {
