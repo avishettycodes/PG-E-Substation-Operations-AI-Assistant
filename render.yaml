@@ -23,7 +23,7 @@ services:
         fromService:
           name: pge-substation-assistant
           type: web
-          property: url
+          property: host
     routes:
       - type: rewrite
         source: /api/*
