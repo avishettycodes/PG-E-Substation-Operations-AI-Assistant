@@ -304,24 +304,24 @@ const database: Database = {
   SafetyGuidelines: [
     {
       guideline_id: 7001,
-      procedure_name: 'Live-Line Maintenance',
-      required_PPE: 'Insulated gloves, arc flash suit, helmet',
-      safety_instructions: 'Always de-energize equipment before performing maintenance.',
-      compliance_notes: 'Follow NFPA 70E guidelines.'
-    },
-    {
-      guideline_id: 7002,
       procedure_name: 'Breaker Racking',
       required_PPE: 'Hard hat, safety glasses, gloves',
       safety_instructions: 'Ensure lockout-tagout procedures are followed before racking.',
       compliance_notes: 'Review annual safety training.'
     },
     {
+      guideline_id: 7002,
+      procedure_name: 'Live-Line Maintenance',
+      required_PPE: 'Insulated gloves, arc flash suit, full face shield',
+      safety_instructions: 'Maintain minimum approach distance. Use insulated tools only.',
+      compliance_notes: 'Requires Hot-Work Certification.'
+    },
+    {
       guideline_id: 7003,
       procedure_name: 'High Voltage Inspections',
-      required_PPE: 'Insulated gloves, dielectric boots, face shield',
-      safety_instructions: 'Maintain a safe distance and use appropriate barriers.',
-      compliance_notes: 'Compliance with OSHA regulations required.'
+      required_PPE: 'Hard hat, safety glasses, insulated gloves, FR clothing',
+      safety_instructions: 'Ensure all equipment is properly grounded before inspection.',
+      compliance_notes: 'Follow NERC compliance guidelines.'
     }
   ],
   
@@ -552,7 +552,22 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     entity = entity || 'Safety Protocols for Live-Line Maintenance';
   }
   
-  // Check for geofencing queries FIRST to prioritize this intent
+  // Check for inventory and spare parts queries FIRST since they're specific
+  if (queryLower.includes('inventory') || 
+      queryLower.includes('spare parts') || 
+      queryLower.includes('spare') || 
+      queryLower.includes('parts available') ||
+      queryLower.includes('stock status') ||
+      queryLower.includes('stock') ||
+      queryLower.includes('replacement') && queryLower.includes('available') ||
+      queryLower.includes('bushings available') ||
+      queryLower.includes('contacts available') ||
+      queryLower.includes('do we have') && (queryLower.includes('parts') || queryLower.includes('bushings') || queryLower.includes('contacts'))) {
+    console.log(`Detected intent: inventory, entity: ${entity}`);
+    return { intent: 'inventory', entity };
+  }
+  
+  // Check for geofencing queries NEXT to prioritize this intent
   if (queryLower.includes('geofence') || 
       queryLower.includes('geofenced') ||
       queryLower.includes('location') || 
@@ -564,6 +579,27 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     return { intent: 'geofencing', entity };
   }
   
+  // Check for incidents - especially reporting
+  if ((queryLower.includes('i need to report') || 
+      queryLower.includes('report an') || 
+      queryLower.includes('log a new') || 
+      queryLower.includes('report an') || 
+      queryLower.includes('log an') ||
+      queryLower.includes('submit a')) && 
+      (queryLower.includes('incident') || queryLower.includes('failure') || 
+       queryLower.includes('overheating') || queryLower.includes('issue'))) {
+    console.log(`Detected intent: incident_submission`);
+    return { intent: 'incident_submission' };
+  }
+  
+  if (queryLower.includes('incident') || queryLower.includes('failure') || 
+      queryLower.includes('accident') || queryLower.includes('outage') ||
+      (queryLower.includes('show me') && queryLower.includes('incident')) || 
+      queryLower.includes('historical incident')) {
+    console.log(`Detected intent: incidents, entity: ${entity}`);
+    return { intent: 'incidents', entity };
+  }
+  
   // Check for diagnostic summary queries (more specific before more general)
   if (queryLower.includes('latest diagnostic summary') || 
       queryLower.includes('show me the latest diagnostic') ||
@@ -573,6 +609,14 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     return { intent: 'diagnostic_summary', entity };
   }
   
+  // Check for aggregated issues/diagnostics query
+  if ((queryLower.includes('which') || queryLower.includes('what')) && 
+      queryLower.includes('assets') && 
+      (queryLower.includes('issues') || queryLower.includes('problems') || queryLower.includes('diagnostic issues'))) {
+    console.log('Detected intent: diagnostic_issues');
+    return { intent: 'diagnostic_issues' };
+  }
+  
   // Check for asset health intent
   if (queryLower.includes('health') || queryLower.includes('status') || queryLower.includes('condition') || 
       queryLower.includes('score') || queryLower.includes('diagnostics')) {
@@ -580,12 +624,19 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     return { intent: 'asset_health', entity };
   }
   
-  // Check for aggregated issues/diagnostics query
-  if ((queryLower.includes('which') || queryLower.includes('what')) && 
-      queryLower.includes('assets') && 
-      (queryLower.includes('issues') || queryLower.includes('problems') || queryLower.includes('diagnostic issues'))) {
-    console.log('Detected intent: diagnostic_issues');
-    return { intent: 'diagnostic_issues' };
+  // Check for predictive maintenance - must come before general maintenance
+  if (queryLower.includes('risk level') || 
+      queryLower.includes('what is the risk') ||
+      queryLower.includes('current risk') ||
+      queryLower.includes('predictive') || 
+      queryLower.includes('predict') || 
+      (queryLower.includes('based on') && (queryLower.includes('sensor') || queryLower.includes('latest'))) || 
+      (queryLower.includes('recommendation') && queryLower.includes('for')) ||
+      queryLower.includes('predictive alerts') ||
+      queryLower.includes('sensor data') ||
+      queryLower.includes('what recommendation')) {
+    console.log(`Detected intent: predictive_maintenance, entity: ${entity}`);
+    return { intent: 'predictive_maintenance', entity };
   }
   
   // Check for maintenance intent - scheduled maintenance first
@@ -632,24 +683,6 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     return { intent: 'inspection_report', entity };
   }
   
-  // Check for predictive maintenance
-  if (queryLower.includes('risk level') || 
-      queryLower.includes('what is the risk') ||
-      queryLower.includes('current risk')) {
-    console.log(`Detected intent: predictive_maintenance, entity: ${entity}`);
-    return { intent: 'predictive_maintenance', entity };
-  }
-  
-  if (queryLower.includes('predictive') || queryLower.includes('predict') || 
-      (queryLower.includes('based on') && queryLower.includes('sensor')) || 
-      (queryLower.includes('maintenance') && queryLower.includes('recommendation')) ||
-      queryLower.includes('predictive alerts') ||
-      queryLower.includes('sensor data') ||
-      queryLower.includes('what recommendation')) {
-    console.log(`Detected intent: predictive_maintenance, entity: ${entity}`);
-    return { intent: 'predictive_maintenance', entity };
-  }
-  
   // Check for real-time data
   if (queryLower.includes('real-time') || queryLower.includes('real time') || queryLower.includes('current') || 
       queryLower.includes('sensor') || queryLower.includes('voltage') || queryLower.includes('load') || 
@@ -659,10 +692,35 @@ export function extractIntent(query: string): { intent: string; entity?: string 
     return { intent: 'real_time_data', entity };
   }
   
-  // Check for safety guidelines
-  if (queryLower.includes('safety') || queryLower.includes('ppe') || 
-      queryLower.includes('compliance') || queryLower.includes('procedure') ||
-      queryLower.includes('guidelines') || queryLower.includes('steps')) {
+  // Check specifically for PPE and required equipment queries - these should be handled BEFORE maintenance
+  if (queryLower.includes('ppe') || 
+      queryLower.includes('personal protective equipment') ||
+      queryLower.includes('required equipment') || 
+      (queryLower.includes('what') && queryLower.includes('required') && !queryLower.includes('maintenance')) ||
+      (queryLower.includes('safety') && queryLower.includes('equipment'))) {
+    console.log(`Detected intent: safety_guidelines, entity: ${entity}`);
+    
+    // Try to determine specific procedure type
+    if (queryLower.includes('live') || queryLower.includes('line maintenance')) {
+      entity = entity || 'Live-Line Maintenance';
+    } else if (queryLower.includes('breaker') || queryLower.includes('racking')) {
+      entity = entity || 'Breaker Racking';
+    } else if (queryLower.includes('high voltage')) {
+      entity = entity || 'High Voltage Inspections';
+    }
+    
+    console.log(`Detected procedure for PPE: ${entity}`);
+    return { intent: 'safety_guidelines', entity };
+  }
+  
+  // General safety guidelines check
+  if (queryLower.includes('safety') || 
+      queryLower.includes('compliance') || 
+      queryLower.includes('procedure') ||
+      queryLower.includes('guidelines') || 
+      queryLower.includes('steps') ||
+      queryLower.includes('regulatory') ||
+      queryLower.includes('protocol')) {
     console.log(`Detected intent: safety_guidelines, entity: ${entity}`);
     return { intent: 'safety_guidelines', entity };
   }
@@ -674,33 +732,6 @@ export function extractIntent(query: string): { intent: string; entity?: string 
       queryLower.includes('procedures')) {
     console.log(`Detected intent: training_materials, entity: ${entity}`);
     return { intent: 'training_materials', entity };
-  }
-  
-  // Check for incidents
-  if ((queryLower.includes('i need to report') || 
-      queryLower.includes('report an') || 
-      queryLower.includes('log a new') || 
-      queryLower.includes('submit a')) && 
-      (queryLower.includes('incident') || queryLower.includes('failure') || 
-       queryLower.includes('overheating') || queryLower.includes('issue'))) {
-    console.log(`Detected intent: incident_submission`);
-    return { intent: 'incident_submission' };
-  }
-  
-  if (queryLower.includes('incident') || queryLower.includes('failure') || 
-      queryLower.includes('accident') || queryLower.includes('outage') ||
-      (queryLower.includes('show me') && queryLower.includes('report')) || 
-      queryLower.includes('historical')) {
-    console.log(`Detected intent: incidents, entity: ${entity}`);
-    return { intent: 'incidents', entity };
-  }
-  
-  // Check for inventory
-  if (queryLower.includes('inventory') || queryLower.includes('part') || 
-      queryLower.includes('spare') || queryLower.includes('stock') ||
-      queryLower.includes('available') || queryLower.includes('replacement')) {
-    console.log(`Detected intent: inventory, entity: ${entity}`);
-    return { intent: 'inventory', entity };
   }
   
   // No specific intent identified
@@ -913,196 +944,163 @@ function generateSyntheticData(intent: string, query: string, entity?: string): 
   }
 }
 
-// Modify getDataBasedOnIntent to use synthetic data when needed
-export function getDataBasedOnIntent(intent: string, entity?: string, originalQuery?: string): any {
-  // First try to get data from the database
-  let result;
+// Function to query database based on intent
+function queryDatabaseByIntent(intent: string, entity?: string, originalQuery?: string): any {
+  // For debugging
+  console.log(`Querying database with intent: ${intent}, entity: ${entity || 'none'}`);
   
   switch (intent) {
     case 'greeting':
       return {
-        message: "Hello! I'm the PG&E Substation Operations Assistant. I'm ready to help with information about transformers, breakers, maintenance schedules, safety guidelines, and other substation-related questions. What information do you need today?"
+        message: "Hello! I'm the PG&E Substation Operations Assistant. I can provide information about substation assets, maintenance schedules, safety guidelines, and more. How can I help you today?"
       };
       
     case 'help':
-      const helpText = "I can help you with the following types of substation information:\n\n" +
-             "1. Substation Asset Health: Check the health status of transformers, breakers, and other equipment\n" +
-             "2. Substation Maintenance: View scheduled maintenance and historical maintenance logs\n" +
-             "3. Substation Inspections: Access inspection reports and submit new ones\n" +
-             "4. Real-Time Substation Data: Get current readings from substations\n" +
-             "5. Predictive Maintenance: Get recommendations based on substation sensor data\n" +
-             "6. Substation Safety Guidelines: Access PPE requirements and safety procedures\n" +
-             "7. Technical Training: Get guidance on substation procedures and interpretations\n" +
-             "8. Incident Reporting: Report and view historical substation incident data\n" +
-             "9. Substation Inventory: Check spare parts availability\n" +
-             "10. Geofencing: Verify your location relative to substation assets\n\n" +
-             "Just ask me what you need to know about substations!";
-      return { response: helpText };
+      return {
+        message: "I can help you with the following types of information:\n\n" +
+             "1. Asset Health: Check the health status of transformers, breakers, and other equipment\n" +
+             "2. Maintenance: View scheduled maintenance and historical maintenance logs\n" +
+             "3. Inspections: Access inspection reports and submit new ones\n" +
+             "4. Real-Time Data: Get current readings from substations\n" +
+             "5. Predictive Maintenance: Get recommendations based on sensor data\n" +
+             "6. Safety Guidelines: Access PPE requirements and safety procedures\n" +
+             "7. Technical Training: Get guidance on procedures and interpretations\n" +
+             "8. Incident Reporting: Report and view historical incident data\n" +
+             "9. Inventory: Check spare parts availability\n" +
+             "10. Geofencing: Verify your location relative to assets\n\n" +
+             "Just ask me what you need to know!"
+      };
       
     case 'off_topic':
       return {
-        message: "I apologize, but I can only answer questions related to substation operations for PG&E. For questions about billing, outages, or other general inquiries, please call PG&E Customer Service at 1-800-743-5000."
-      };
-      
-    case 'general':
-      return {
-        message: "I can help you with information about substation assets, maintenance schedules, inspection reports, real-time data, safety guidelines, and more. Please ask a specific question about PG&E substations."
+        message: "I'm specifically designed to provide information about PG&E substation operations. I can help with questions about transformers, breakers, maintenance schedules, safety guidelines, and more related to substations. For other topics, you might want to try a different assistant."
       };
       
     case 'asset_health':
       if (entity) {
-        result = database.AssetDiagnostics.filter(item => item.asset_id === entity);
-        if (result.length === 0 && originalQuery) {
-          // No exact match found, generate synthetic data
-          return generateSyntheticData(intent, originalQuery, entity);
-        }
+        return database.AssetDiagnostics.filter(item => item.asset_id === entity);
+      } else {
+        return database.AssetDiagnostics;
       }
-      return result.length > 0 ? result : database.AssetDiagnostics;
       
     case 'diagnostic_summary':
       if (entity) {
-        result = database.AssetDiagnostics.filter(item => item.asset_id === entity);
-        if (result.length === 0 && originalQuery) {
-          // No exact match found, generate synthetic data
-          return generateSyntheticData('asset_health', originalQuery, entity);
-        }
+        return database.AssetDiagnostics.filter(item => item.asset_id === entity);
+      } else {
+        return database.AssetDiagnostics;
       }
-      return result.length > 0 ? result : database.AssetDiagnostics;
       
     case 'diagnostic_issues':
-      // Filter assets with issues in the past week
-      const now = new Date();
-      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      // Filter for assets and inspections with issues - excluding those marked as normal
+      const diagnosticIssues = database.AssetDiagnostics.filter(asset => 
+        // Only include if health score is low or summary indicates issues
+        (asset.health_score < 90) && 
+        // Exclude if the summary explicitly says no issues
+        !asset.diagnostic_summary.toLowerCase().includes('no issues') &&
+        !asset.diagnostic_summary.toLowerCase().includes('normal parameter')
+      );
       
-      // Find assets with health issues
-      const assetsWithIssues = database.AssetDiagnostics.filter(asset => {
-        const diagDate = new Date(asset.last_diagnostic_date);
-        return diagDate >= oneWeekAgo && 
-               (asset.diagnostic_summary.toLowerCase().includes('issue') || 
-                asset.diagnostic_summary.toLowerCase().includes('problem') ||
-                asset.diagnostic_summary.toLowerCase().includes('degrad') ||
-                asset.diagnostic_summary.toLowerCase().includes('abnormal') ||
-                asset.health_score < 85);
-      });
+      const inspectionIssues = database.InspectionReports.filter(report => 
+        // Include only if it mentions specific issues
+        (report.report_summary.toLowerCase().includes('issue') || 
+        report.report_summary.toLowerCase().includes('potential') ||
+        report.report_summary.toLowerCase().includes('anomalies') ||
+        report.report_summary.toLowerCase().includes('hot spots') ||
+        report.report_summary.toLowerCase().includes('problem') ||
+        report.report_summary.toLowerCase().includes('sign')) &&
+        // Exclude if it explicitly says no issues or normal
+        !report.report_summary.toLowerCase().includes('no anomalies') &&
+        !report.report_summary.toLowerCase().includes('normal pattern')
+      );
       
-      // Find assets with inspection issues
-      const inspectionsWithIssues = database.InspectionReports.filter(report => {
-        const reportDate = new Date(report.report_date);
-        return reportDate >= oneWeekAgo && 
-               (report.report_summary.toLowerCase().includes('issue') ||
-                report.report_summary.toLowerCase().includes('problem') ||
-                report.report_summary.toLowerCase().includes('hot spot') ||
-                report.report_summary.toLowerCase().includes('wear') ||
-                report.report_summary.toLowerCase().includes('concern'));
-      });
-      
-      return { 
-        diagnosticIssues: assetsWithIssues,
-        inspectionIssues: inspectionsWithIssues
-      };
+      return { diagnosticIssues, inspectionIssues };
       
     case 'maintenance_schedule':
       if (entity) {
-        result = database.MaintenanceWorkOrders.filter(item => item.asset_id === entity);
-        if (result.length === 0 && originalQuery) {
-          // No exact match found, generate synthetic data
-          return generateSyntheticData(intent, originalQuery, entity);
-        }
+        return database.MaintenanceWorkOrders.filter(item => item.asset_id === entity);
+      } else {
+        return database.MaintenanceWorkOrders;
       }
-      return result.length > 0 ? result : database.MaintenanceWorkOrders;
       
     case 'maintenance_history':
       if (entity) {
-        result = database.MaintenanceHistory.filter(item => item.asset_id === entity);
-        if (result.length === 0 && originalQuery) {
-          // No exact match found, generate synthetic data
-          return generateSyntheticData(intent, originalQuery, entity);
-        }
+        return database.MaintenanceHistory.filter(item => item.asset_id === entity);
+      } else {
+        return database.MaintenanceHistory;
       }
-      return result.length > 0 ? result : database.MaintenanceHistory;
       
     case 'inspection_report':
       if (entity) {
-        if (entity === 'infrared' || entity === 'visual') {
-          // Filter by inspection type
-          result = database.InspectionReports.filter(item => 
+        // If entity is an asset ID
+        if (entity.match(/^[TBS]-\d{3}$/i)) {
+          return database.InspectionReports.filter(item => item.asset_id === entity);
+        } 
+        // If entity is an inspection type
+        else if (entity.toLowerCase() === 'infrared' || entity.toLowerCase() === 'visual') {
+          return database.InspectionReports.filter(item => 
             item.inspection_type.toLowerCase() === entity.toLowerCase());
-        } else {
-          // Filter by asset ID
-          result = database.InspectionReports.filter(item => item.asset_id === entity);
-        }
-        
-        if (result.length === 0 && originalQuery) {
-          // No exact match found, generate synthetic data
-          return generateSyntheticData(intent, originalQuery, entity);
         }
       }
-      return result.length > 0 ? result : database.InspectionReports;
+      return database.InspectionReports;
       
     case 'inspection_submission':
       return {
         message: "To submit a new inspection report, please follow these steps:\n\n" +
                 "1. Log in to the PG&E Asset Management System\n" +
                 "2. Navigate to 'Inspections' > 'New Inspection Report'\n" +
-                "3. Select the asset type and ID you're inspecting\n" +
-                "4. Choose the inspection type (Visual, Infrared, etc.)\n" +
-                "5. Fill out all required fields with your findings\n" +
-                "6. Attach any relevant photos or documentation\n" +
-                "7. Submit the form for review\n\n" +
-                "Your report will be processed and added to the asset's inspection history."
+                "3. Select the substation asset, inspection type, and fill in the required fields\n" +
+                "4. Upload any relevant photos or measurements\n" +
+                "5. Submit the form for review\n\n" +
+                "Your report will be processed and added to the asset history."
       };
       
     case 'predictive_maintenance':
+      // For specific risk/predictive queries, check the PredictiveMaintenance table first
       if (entity) {
-        result = database.PredictiveMaintenance.filter(item => item.asset_id === entity);
-        if (result.length > 0) {
-          return result;
+        const predictiveData = database.PredictiveMaintenance.filter(item => item.asset_id === entity);
+        
+        if (predictiveData.length > 0) {
+          return predictiveData;
+        }
+        
+        // If no predictive data, check the scheduled maintenance that could be relevant
+        const scheduledMaintenance = database.MaintenanceWorkOrders.filter(item => item.asset_id === entity);
+        
+        if (scheduledMaintenance.length > 0) {
+          return { type: 'scheduled', data: scheduledMaintenance };
+        }
+        
+        // As a fallback, return health data with a note that it's not predictive
+        const healthData = database.AssetDiagnostics.filter(item => item.asset_id === entity);
+        if (healthData.length > 0) {
+          return { type: 'health', data: healthData };
         }
         
         if (originalQuery) {
           // No exact match found, generate synthetic data
           return generateSyntheticData(intent, originalQuery, entity);
         }
-        
-        // Fall back to scheduled maintenance if available
-        const scheduledMaintenance = database.MaintenanceWorkOrders.filter(item => item.asset_id === entity);
-        if (scheduledMaintenance && scheduledMaintenance.length > 0) {
-          return {
-            type: 'scheduled',
-            data: scheduledMaintenance
-          };
-        }
-        
-        // Fall back to asset health if available
-        const assetHealth = database.AssetDiagnostics.filter(item => item.asset_id === entity);
-        if (assetHealth && assetHealth.length > 0) {
-          return {
-            type: 'health',
-            data: assetHealth
-          };
-        }
       }
       return database.PredictiveMaintenance;
       
     case 'real_time_data':
       if (entity) {
-        result = database.RealTimeData.filter(item => item.substation_id === entity);
-        if (result.length === 0 && originalQuery) {
-          // No exact match found, generate synthetic data
-          return generateSyntheticData(intent, originalQuery, entity);
-        }
+        return database.RealTimeData.filter(item => item.substation_id === entity);
+      } else {
+        return database.RealTimeData;
       }
-      return result.length > 0 ? result : database.RealTimeData;
       
     case 'geofencing':
       if (entity) {
-        result = database.Geofencing.filter(item => item.asset_id === entity);
+        const result = database.Geofencing.filter(item => item.asset_id === entity);
+        
         if (result.length === 0 && originalQuery) {
           // No exact match found, generate synthetic data
           return generateSyntheticData(intent, originalQuery, entity);
         }
+        return result;
       }
-      return result.length > 0 ? result : database.Geofencing;
+      return database.Geofencing;
       
     case 'safety_guidelines':
       if (entity) {
@@ -1129,6 +1127,28 @@ export function getDataBasedOnIntent(intent: string, entity?: string, originalQu
             item.procedure_name.toLowerCase().includes('high voltage'));
         }
       } 
+      
+      // Special case for PPE queries - if we made it here and the query mentions PPE
+      if (originalQuery && originalQuery.toLowerCase().includes('ppe')) {
+        if (originalQuery.toLowerCase().includes('live') || 
+            originalQuery.toLowerCase().includes('line')) {
+          // Return Live-Line maintenance PPE requirements specifically
+          return database.SafetyGuidelines.filter(item => 
+            item.procedure_name.toLowerCase().includes('live'));
+        } else if (originalQuery.toLowerCase().includes('breaker')) {
+          // Return breaker racking PPE requirements specifically
+          return database.SafetyGuidelines.filter(item => 
+            item.procedure_name.toLowerCase().includes('breaker'));
+        } else if (originalQuery.toLowerCase().includes('high voltage')) {
+          // Return high voltage PPE requirements specifically
+          return database.SafetyGuidelines.filter(item => 
+            item.procedure_name.toLowerCase().includes('high voltage'));
+        } else {
+          // Return all safety guidelines as they all contain PPE requirements
+          return database.SafetyGuidelines;
+        }
+      }
+      
       return database.SafetyGuidelines;
       
     case 'training_materials':
@@ -1181,10 +1201,45 @@ export function getDataBasedOnIntent(intent: string, entity?: string, originalQu
       }
       
     case 'inventory':
+      // Check if we're looking for a specific part type mentioned in the query
+      let specificPartType = null;
+      
+      if (originalQuery) {
+        const queryLower = originalQuery.toLowerCase();
+        if (queryLower.includes('bushing') || queryLower.includes('bushings')) {
+          specificPartType = 'bushings';
+        } else if (queryLower.includes('contact') || queryLower.includes('contacts')) {
+          specificPartType = 'contacts';
+        } else if (queryLower.includes('oil filter') || queryLower.includes('filters')) {
+          specificPartType = 'oil filters';
+        }
+      }
+      
       if (entity) {
-        return database.Inventory.filter(item => item.asset_id === entity);
+        let results = database.Inventory.filter(item => item.asset_id === entity);
+        
+        // If we identified a specific part type, further filter the results
+        if (specificPartType && results.length > 0) {
+          results = results.filter(item => 
+            item.part_name.toLowerCase().includes(specificPartType.toLowerCase()));
+        }
+        
+        // If no results, the part might not be directly in our database, so generate synthetic data
+        if (results.length === 0 && originalQuery) {
+          return generateSyntheticData('inventory', originalQuery, entity);
+        }
+        
+        return results;
       } else {
-        return database.Inventory;
+        let results = database.Inventory;
+        
+        // If we identified a specific part type but no asset, show all matching parts
+        if (specificPartType) {
+          results = results.filter(item => 
+            item.part_name.toLowerCase().includes(specificPartType.toLowerCase()));
+        }
+        
+        return results;
       }
       
     default:
@@ -1409,6 +1464,65 @@ app.post('/api/chat/query', (req, res) => {
     
     console.log(`Received chat query: ${message}`);
     
+    // Special case handling for problematic queries that aren't being correctly classified
+    const messageLower = message.toLowerCase();
+    
+    // Special case for PPE queries
+    if (messageLower.includes('ppe') || 
+        (messageLower.includes('required') && messageLower.includes('equipment'))) {
+      
+      if (messageLower.includes('live') || messageLower.includes('line')) {
+        // Direct lookup for live-line PPE requirements
+        const liveLine = database.SafetyGuidelines.find(item => 
+          item.procedure_name.toLowerCase().includes('live'));
+        
+        if (liveLine) {
+          return res.json({ 
+            response: `For ${liveLine.procedure_name}, required PPE: ${liveLine.required_PPE}. ${liveLine.safety_instructions} ${liveLine.compliance_notes}`
+          });
+        }
+      } else if (messageLower.includes('breaker') || messageLower.includes('racking')) {
+        // Direct lookup for breaker racking PPE requirements
+        const breaker = database.SafetyGuidelines.find(item => 
+          item.procedure_name.toLowerCase().includes('breaker'));
+        
+        if (breaker) {
+          return res.json({ 
+            response: `For ${breaker.procedure_name}, required PPE: ${breaker.required_PPE}. ${breaker.safety_instructions} ${breaker.compliance_notes}`
+          });
+        }
+      } else if (messageLower.includes('high voltage')) {
+        // Direct lookup for high voltage PPE requirements
+        const highVoltage = database.SafetyGuidelines.find(item => 
+          item.procedure_name.toLowerCase().includes('high'));
+        
+        if (highVoltage) {
+          return res.json({ 
+            response: `For ${highVoltage.procedure_name}, required PPE: ${highVoltage.required_PPE}. ${highVoltage.safety_instructions} ${highVoltage.compliance_notes}`
+          });
+        }
+      }
+    }
+    
+    // Special case for predicitve maintenance risk level queries
+    if ((messageLower.includes('risk level') || messageLower.includes('what is the risk')) && 
+        (messageLower.includes('transformer') || messageLower.includes('breaker'))) {
+      
+      // Extract the asset ID if present
+      const assetMatches = messageLower.match(/([tb]-\d{3})/i);
+      if (assetMatches) {
+        const assetId = assetMatches[1].toUpperCase();
+        const predictiveData = database.PredictiveMaintenance.filter(item => item.asset_id === assetId);
+        
+        if (predictiveData.length > 0) {
+          const data = predictiveData[0];
+          return res.json({ 
+            response: `${data.asset_name} has a ${data.risk_level.toLowerCase()} risk level as of ${data.prediction_date}. ${data.recommendation_details} Sensor data: ${data.sensor_data_summary}`
+          });
+        }
+      }
+    }
+    
     // Process the message to get a database-based response
     const { intent, entity } = extractIntent(message);
     console.log(`Detected intent: ${intent}, entity: ${entity || 'none'}`);
@@ -1460,7 +1574,7 @@ app.post('/api/chat/query', (req, res) => {
     
     // Process other intents normally, all data comes from the substation database
     // Pass the original message to enable synthetic data generation when needed
-    const data = getDataBasedOnIntent(intent, entity, message);
+    const data = queryDatabaseByIntent(intent, entity, message);
     const response = generateResponseFromData(intent, data);
     
     return res.json({ response });
