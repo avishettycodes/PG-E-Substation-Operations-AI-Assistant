@@ -2,6 +2,27 @@
 
 All notable changes to the PG&E Substation Operations AI Assistant will be documented in this file.
 
+## [1.2.0] - 2025-04-07
+
+### Added
+- Detailed step-by-step DGA test interpretation guide with key gas identification, ratio analysis, and maintenance recommendations
+- Special case detection for DGA test interpretation queries to provide comprehensive guidance
+- Enhanced logging for entity detection to improve troubleshooting
+- Improved special case handling for PPE requirements with direct database lookups
+- Enhanced risk level query handling with specific asset detection
+
+### Changed
+- Refactored special case detection logic to be more robust
+- Improved formatting of technical guidance responses
+- Enhanced entity detection with more detailed logging
+- Optimized database queries for faster response times
+
+### Fixed
+- Fixed issues with DGA test interpretation queries returning limited information
+- Resolved TypeScript errors in real-time data handling
+- Improved error handling for risk level queries
+- Enhanced entity detection for special case handlers
+
 ## [1.1.0] - 2025-04-07
 
 ### Added

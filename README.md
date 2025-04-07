@@ -29,6 +29,8 @@ The AI assistant includes comprehensive knowledge about:
 
 ## Latest Updates
 
+* **Detailed DGA Test Interpretation Guide**: Added comprehensive step-by-step guide for interpreting Dissolved Gas Analysis test results for transformers, including key gas identification, ratio analysis, and action recommendations.
+* **Enhanced Special Case Detection**: Improved detection for PPE requirements, risk level assessment, and inventory queries with direct database lookups.
 * **Enhanced Conversation Support**: Added support for casual greetings like "hi", "hey", "what's up" while maintaining focus on substation operations.
 * **Improved Error Handling**: Better TypeScript support and robust error handling for server stability.
 * **Port Configuration**: Updated to use port 7777 to prevent conflicts with other services.
@@ -50,6 +52,7 @@ The AI assistant includes comprehensive knowledge about:
 * **Training Materials**: Access training resources and documentation.
 * **Incident Reporting**: View past incidents and potential causes.
 * **Inventory Management**: Check availability of spare parts and their locations.
+* **Technical Reference Guides**: Comprehensive guides for technical procedures like DGA test interpretation.
 
 ## Getting Started
 
@@ -121,6 +124,7 @@ Show me the last infrared inspection report for Transformer T-789.
 
 # Real-time Data
 What is the temperature at Substation S-567 right now?
+What is the current temperature at Substation S-999?
 
 # Geofencing
 Am I within the geofenced area for Transformer T-123?
@@ -128,12 +132,19 @@ Am I within the geofenced area for Transformer T-123?
 # Safety
 What are the safety guidelines for breaker racking?
 What are the safety guidelines for working on high voltage circuits?
+What is the required PPE for live-line maintenance?
 
 # Technical Knowledge
 How do I interpret DGA test results for transformers?
+What are the key gases to look for in DGA test results?
 
 # Inventory
 Do we have spare bushings available for Transformer T-987?
+What is the current stock status for replacement contacts for Breaker B-456?
+
+# Risk Assessment
+What is the current risk level for Breaker B-456?
+What is the risk level for Transformer T-789?
 ```
 
 ## Development
@@ -148,7 +159,7 @@ Do we have spare bushings available for Transformer T-987?
 
 ## Deployment
 
-The application includes a `render.yaml` file for easy deployment to Render.com.
+The application includes a `render.yaml` file for easy deployment to Render.com. See `DEPLOYMENT.md` for detailed instructions.
 
 ## Troubleshooting
 
@@ -163,7 +174,10 @@ For more detailed troubleshooting, see `TROUBLESHOOTING.md`.
 
 ## Documentation
 
+* `CHANGELOG.md`: Detailed list of changes by version
 * `DATABASE_SERVER_README.md`: Details about the database-based server
+* `DEPLOYMENT.md`: Instructions for deploying the application
+* `ENV_SETUP.md`: Environment configuration setup guide
 * `TROUBLESHOOTING.md`: Common issues and their solutions
 
 ## License

@@ -8,6 +8,7 @@ This version of the PG&E Chatbot provides answers based on the actual sample dat
 2. **Smart Intent Detection**: Analyzes user queries to determine the subject they're asking about.
 3. **Entity Recognition**: Identifies specific assets (T-123, B-456), substations, and procedures.
 4. **Formatted Responses**: Generates natural language responses based on the database content.
+5. **Special Case Handling**: Provides detailed technical guidance for complex topics like DGA test interpretation.
 
 ## Types of Information Available
 
@@ -22,6 +23,7 @@ The system can answer questions about:
 7. **Safety Guidelines**: Required PPE and safety instructions for procedures.
 8. **Incident Reports**: Details of failures, outages, and their causes.
 9. **Inventory & Spare Parts**: Available quantities and locations of parts.
+10. **Technical Guides**: Detailed technical guidance like DGA test interpretation.
 
 ## Running the Database-Based Server
 
@@ -50,7 +52,7 @@ Try asking about:
 
 4. Real-time data:
    - "What are the current sensor readings for Substation S-567?"
-   - "What's the current temperature at S-567?"
+   - "What's the current temperature at S-999?"
 
 5. Safety:
    - "What PPE is required for live-line maintenance?"
@@ -64,6 +66,11 @@ Try asking about:
    - "Do we have spare parts for Breaker B-456?"
    - "What's in stock for Transformer T-123?"
 
+8. Technical guides:
+   - "How do I interpret DGA test results?"
+   - "What are the key gases to look for in DGA test results?"
+   - "How should I analyze DGA ratios?"
+
 ## Technical Details
 
 The mock server includes:
@@ -72,6 +79,16 @@ The mock server includes:
 2. **Intent Extraction**: Logic to determine what the user is asking about.
 3. **Entity Recognition**: Pattern matching to identify specific assets, substations, etc.
 4. **Response Generation**: Logic to format database content into natural language responses.
+5. **Special Case Handlers**: Direct response handlers for complex technical questions.
+
+## Special Case Handling
+
+The server includes special case handlers for:
+
+1. **DGA Test Interpretation**: Provides a detailed step-by-step guide for interpreting Dissolved Gas Analysis results.
+2. **PPE Requirements**: Directly looks up appropriate PPE based on the procedure type mentioned.
+3. **Risk Level Assessment**: Provides asset-specific risk level information with recommendations.
+4. **Inventory Queries**: Directly searches the inventory database for parts availability.
 
 ## Troubleshooting
 
