@@ -1,8 +1,9 @@
 services:
-  # AI-Powered Substation Operations Assistant
+  # Backend API server for the PG&E Substation Operations Assistant
   - type: web
     name: pge-substation-assistant
     env: node
+    plan: free
     buildCommand: cd server && npm install
     startCommand: cd server && node --optimize_for_size --max_old_space_size=512 --gc_interval=100 $(which npx) ts-node src/data-based-mock-server.ts
     envVars:
@@ -10,21 +11,15 @@ services:
         value: production
       - key: PORT
         value: 4477
-    plan: free
     healthCheckPath: /health
 
+  # Frontend static site for the PG&E Substation Operations Assistant
   - type: web
     name: pge-substation-web
     env: static
+    plan: free
     buildCommand: cd client && npm install && npm run build && cp -r build/* ../server/public/
     staticPublishPath: ./server/public
-    envVars:
-      - key: API_URL
-        fromService:
-          name: pge-substation-assistant
-          type: web
-          property: host
-          envKey: API_HOST
     routes:
       - type: rewrite
         source: /api/*
