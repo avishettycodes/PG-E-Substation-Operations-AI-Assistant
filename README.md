@@ -1,4 +1,5 @@
 # PG&E Substation Operations AI Assistant
+By Avanish Shetty and Vlad Zalutsky
 
 An AI-powered assistant for PG&E substation operations that provides information from a comprehensive database including asset health, maintenance schedules, inspections, and more.
 
